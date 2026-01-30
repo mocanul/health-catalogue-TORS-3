@@ -2,17 +2,18 @@
 
 ## Overview Part 1
 Web-bsaed health equipment ordering catalogue including the following:
+
 - **Clear display of the equipment, divided into categories, including quantities**
 - **Digital shopping basket where users can add items to from the catalogue**
 - **Link items booked to lessons, rooms and calendars**
 - **Allow removing or adding more items to a booking**
 - **An "Other" option, free input text box for things that aren't in stock**
 
-- **??**
+**??**
 - **Option to allocate rooms, lessons and days to the list**
 - **Attach files feature**
 - **Compulsory fields for health and safety risk assessments**
-- **??**
+**??**
 
 Further features for linked to catalogue:
 - **Show if equipment booking has been submitted/ reviewed/ actioned**
