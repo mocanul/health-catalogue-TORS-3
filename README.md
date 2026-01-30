@@ -1,5 +1,3 @@
-# health-catalogue-TORS-3
-
 # TORS – Health Equipment Ordering Catalogue
 
 ## Overview Part 1
@@ -53,8 +51,28 @@ Online hosting for PostgreSQL, easy to access and use throughout the development
 
 ## Setup
 
+### Prerequisites
+- Node.js
+- Git
+
 ### Dependancies
+- ```npm install```
+
+### Environment
+- Create a .env file in the project root
+
+### Database
+
+- Generate prisma client
+```npx prisma generate```
+
+- Run prisma studio to view database
+```npx prisma studio```
+
+### Run program
+```npm run dev```
+
 
 
 ## Readme
-This is not the final version of the readme. Curre
+This is not the final version of the readme
