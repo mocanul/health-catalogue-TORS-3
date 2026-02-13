@@ -36,6 +36,19 @@ model Session {
   @@index([expiresAt])
 }
 
+model LoginAttempt {
+  id          String   @id @default(uuid())
+  attemptedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  email     String @db.VarChar(320)
+  ipAddress String @db.VarChar(64)
+
+  success Boolean
+
+  @@index([email, attemptedAt(sort: Desc)])
+  @@index([ipAddress, attemptedAt(sort: Desc)])
+}
+
 enum Role {
   STUDENT
   STAFF
