@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { checkLoginRateLimit, normalizeEmail } from "@/lib/auth/loginRateLimiter";
 import { z } from "zod";
 import bcrypt from "bcrypt";
+import { createSession } from "@/lib/auth/session";
+import { cookies } from "next/headers";
+
 
 const LoginSchema = z.object({
     email: z.string().email(),
@@ -101,7 +104,19 @@ export async function POST(req: NextRequest) {
             },
         });
 
-        //TODO create session / JWT / httpOnly cookie here
+        //create session with raw token
+        const token = await createSession(user.id);
+
+        //set HttpOnly cookie
+        const cookieStore = await cookies();
+
+        cookieStore.set("session", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60, // 1 hour (seconds)
+        });
 
         return NextResponse.json(
             { message: "Login successful" },
