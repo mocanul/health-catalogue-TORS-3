@@ -1,29 +1,112 @@
-import Link from "next/link";
+"use client"
+
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function Login() {
+    const router = useRouter()
+
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        setError(null)
+        setLoading(true)
+
+        try {
+            //connect to login backend
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            })
+
+            const data = await res.json().catch(() => ({}))
+
+            if (!res.ok) {
+                setError(data?.error ?? "Login failed")
+                setLoading(false)
+                return
+            }
+
+            //fetch user information
+            const meRes = await fetch("/api/auth/me", {
+                method: "GET",
+                cache: "no-store",
+            })
+
+            if (!meRes.ok) {
+                setError("Authentication validation failed")
+                setLoading(false)
+                return
+            }
+
+            const me = await meRes.json()
+
+            //based on role, redirect to dashboard
+            switch (me.role) {
+                case "ADMIN":
+                    router.push("/dashboard/admin")
+                    break
+                case "STAFF":
+                    router.push("/dashboard/staff")
+                    break
+                case "TECHNICIAN":
+                    router.push("/dashboard/technician")
+                    break
+                case "STUDENT":
+                    router.push("/dashboard/student")
+                    break
+                default:
+                    setError("Invalid role assigned to account")
+                    setLoading(false)
+                    return
+            }
+
+            router.refresh()
+        } catch {
+            setError("Network error. Please try again.")
+            setLoading(false)
+        }
+    }
+
+
     return (
         <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-
             <div className="flex flex-col w-full max-w-md">
-
-                <Link href="/" className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#B80050] transition">
+                <Link
+                    href="/"
+                    className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#B80050] transition"
+                >
                     <span>←</span> Back to home
                 </Link>
 
                 <div className="rounded-xl bg-white p-10 shadow-2xl border">
-
                     <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center">
                         Login to TORS
                     </h1>
 
-                    <form className="flex flex-col gap-6">
+                    {error && (
+                        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {error}
+                        </div>
+                    )}
 
+                    <form className="flex flex-col gap-6" onSubmit={onSubmit}>
                         <div className="flex flex-col">
                             <label className="mb-2 text-sm font-semibold text-slate-700">
                                 Email
                             </label>
                             <input
                                 type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="email"
+                                required
                                 className="rounded-md border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#B80050] focus:border-[#B80050] transition"
                             />
                         </div>
@@ -34,19 +117,22 @@ export default function Login() {
                             </label>
                             <input
                                 type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                autoComplete="current-password"
+                                required
                                 className="rounded-md border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#B80050] focus:border-[#B80050] transition"
                             />
                         </div>
 
                         <button
                             type="submit"
-                            className="mt-2 rounded-md bg-[#B80050] py-3 text-white font-semibold hover:bg-pink-900 transition"
+                            disabled={loading}
+                            className="mt-2 rounded-md bg-[#B80050] py-3 text-white font-semibold hover:bg-pink-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            Log In
+                            {loading ? "Logging in..." : "Log In"}
                         </button>
-
                     </form>
-
                 </div>
             </div>
         </main>

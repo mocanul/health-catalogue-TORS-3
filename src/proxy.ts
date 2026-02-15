@@ -14,7 +14,6 @@ const roleGates: Array<{ prefix: string; allowed: role[] }> = [
     { prefix: "/dashboard/staff", allowed: ["STAFF"] },
     { prefix: "/dashboard/technician", allowed: ["TECHNICIAN"] },
     { prefix: "/dashboard/student", allowed: ["STUDENT"] },
-    { prefix: "/dashboard", allowed: ["STUDENT", "STAFF", "TECHNICIAN", "ADMIN"] }, // /dashboard root
 ]
 
 function isProtectedPath(pathname: string) {
