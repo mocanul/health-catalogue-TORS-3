@@ -111,11 +111,17 @@ export async function POST(req: NextRequest) {
         const cookieStore = await cookies();
 
         cookieStore.set("session", token, {
+            //prevents JS access and ensures cookie is only sent over HTTPS
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
+
+            //security layer
             sameSite: "lax",
+
+            //path is set to the root so is available to the entire application
+            //cookie expires in an hour
             path: "/",
-            maxAge: 60 * 60, // 1 hour (seconds)
+            maxAge: 60 * 60,
         });
 
         return NextResponse.json(
