@@ -11,6 +11,8 @@ export default function Login() {
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [showPassword, setShowPassword] = useState(false)
+
 
     async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -111,18 +113,29 @@ export default function Login() {
                             />
                         </div>
 
-                        <div className="flex flex-col">
+                        <div className="flex flex-col relative">
                             <label className="mb-2 text-sm font-semibold text-slate-700">
                                 Password
                             </label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                autoComplete="current-password"
-                                required
-                                className="rounded-md border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#B80050] focus:border-[#B80050] transition"
-                            />
+
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                    required
+                                    className="w-full rounded-md border px-4 py-3 pr-12 text-base focus:outline-none focus:ring-2 focus:ring-[#B80050] focus:border-[#B80050] transition"
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500 hover:text-[#B80050] transition"
+                                >
+                                    {showPassword ? "Hide" : "Show"}
+                                </button>
+                            </div>
                         </div>
 
                         <button

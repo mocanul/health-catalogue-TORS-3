@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function Home() {
 
   return (
-    <body className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col">
       <nav className="flex items-center justify-between border-b bg-[#B80050]">
         <Image
           src="/SHU_logo_bnw.png"
@@ -52,6 +52,6 @@ export default function Home() {
           </span>
         </div>
       </main>
-    </body>
+    </div>
   )
 }
