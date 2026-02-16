@@ -1,5 +1,6 @@
 "use client"
 import LogoutButton from "@/components/logoutButton"
+import Link from "next/link"
 
 export default function StudentDashboard() {
     return (
@@ -9,6 +10,11 @@ export default function StudentDashboard() {
                 <h1 className="text-3xl font-bold mb-4">
                     STUDENT DASHBOARD
                 </h1>
+
+                <Link href="/dashboard/student/firstLogin">
+                    first Login
+                </Link>
+
                 <p className="text-gray-600">
                     Authentication successful.
                 </p>
