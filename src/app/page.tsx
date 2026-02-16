@@ -1,55 +1,50 @@
-import Image from "next/image";
 import Link from "next/link";
 
-
 export default function Home() {
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
   return (
     <div className="flex min-h-screen flex-col">
       <nav className="flex items-center justify-between border-b bg-[#B80050]">
-        <Image
-          src="/SHU_logo_bnw.png"
-          alt="SHU logo"
-          width={330}
-          height={330}
-          className="w-60 h-auto"
-        />
+        <img alt="Sheffield Hallam: Knowledge Applied" className="w-30 md:w-35 lg:w-40" src="/SHU_logo_bnw.png"/>
 
-        <div className="flex items-end h-full pr-6 pb-1">
-          <button className="rounded-md px-6 py-3 text-xl font-bold text-white hover:bg-pink-900 transition">
+        <div className="flex items-end h-full pr-4 md:pr-6 lg:pr-6 pb-1">
+          <Link 
+            href="https://www.shu.ac.uk/myhallam"
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
             My Hallam
-          </button>
+          </Link>
 
-          <button className="rounded-md px-6 py-3 text-xl font-bold text-white hover:bg-pink-900 transition">
+          <Link
+            href="https://www.shu.ac.uk/myhallam/support-at-hallam/tors"
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
             About
-          </button>
+          </Link>
 
           <Link
             href="/login"
-            className="rounded-md px-6 py-3 ml-10 text-xl font-bold text-white bg-pink-950 hover:bg-pink-900 transition"
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 ml-10font-bold text-white bg-pink-950 hover:bg-pink-900 transition"
           >
             Login
           </Link>
         </div>
       </nav>
 
-      <main className="flex flex-col h-[calc(100vh-80px)] items-center justify-center bg-gray-50">
-        <Image
-          src="/TORS_logo.png"
-          alt="TORS logo"
-          height={330}
-          width={330}
-          className="w-60 h-auto"
-        />
+      <main className="flex-1 flex flex-col items-center justify-center bg-gray-50 px-4">
+        <img alt="T.O.R.S" className="w-50 md:w-55 lg:w-60" src="/TORS_logo.png"/>
 
-        <div className="w-125 rounded-xl bg-white p-12 shadow-2xl border flex flex-col items-center justify-center text-center">
-          <h1 className="text-2xl font-semibold text-slate-800 mb-4">
-            Landing page content
+        <div className="w-75 md:w-100 lg:w-125 rounded-xl bg-white p-12 shadow-2xl border flex flex-col items-center justify-center text-center">
+          <h1 className="text-lg md:text-xl lg:text-2xl font-semibold text-slate-800 mb-4">
+            Technical Operations Resources & Services
           </h1>
 
-          <span className="text-lg text-[#B80050] font-medium">
-            Coming soon
-          </span>
+          <p className="text-sm md:text-base lg:text-lg text-[#B80050] font-medium">
+            The T.O.R.S booking page provides Sheffield Hallam healthcare students and staff with a simple way to book clinical teaching spaces, simulation rooms, and specialist equipment.
+          </p><br></br>
+          <p className="text-sm md:text-base lg:text-lg text-[#B80050] font-medium">
+            Log in to check availability of rooms and equipment, manage bookings, and prepare for practical sessions.
+          </p>
         </div>
       </main>
     </div>

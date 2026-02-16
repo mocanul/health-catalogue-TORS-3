@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TORS",
-  description: "TORS Health equipment catalogue",
+  title: "T.O.R.S Bookings",
+  description: "Sheffield Hallam Booking of Medical Equipment",
 };
 
 export default function RootLayout({
