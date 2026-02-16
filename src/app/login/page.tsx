@@ -100,10 +100,11 @@ export default function Login() {
 
                     <form className="flex flex-col gap-6" onSubmit={onSubmit}>
                         <div className="flex flex-col">
-                            <label className="mb-2 text-sm font-semibold text-slate-700">
+                            <label htmlFor="email" className="mb-2 text-sm font-semibold text-slate-700">
                                 Email
                             </label>
                             <input
+                                id="email"
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -114,12 +115,13 @@ export default function Login() {
                         </div>
 
                         <div className="flex flex-col relative">
-                            <label className="mb-2 text-sm font-semibold text-slate-700">
+                            <label htmlFor="password" className="mb-2 text-sm font-semibold text-slate-700">
                                 Password
                             </label>
 
                             <div className="relative">
                                 <input
+                                id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
