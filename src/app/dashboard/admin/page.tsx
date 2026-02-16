@@ -1,18 +1,60 @@
 "use client"
 import LogoutButton from "@/components/logoutButton"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+
 
 export default function AdminDashboard() {
+
+    const router = useRouter();
+
+    function handleUsers() {
+
+        router.push("admin/users")
+        router.refresh()
+    }
+
+
+
+
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="p-10 bg-white rounded-xl shadow-lg text-center">
-                <LogoutButton />
-                <h1 className="text-3xl font-bold mb-4">
-                    ADMIN DASHBOARD
-                </h1>
-                <p className="text-gray-600">
-                    Authentication successful.
-                </p>
+        <div className="flex h-full flex-col">
+            <nav className="flex items-center justify-between border-b bg-[#B80050]">
+                <Image
+                    src="/SHU_logo_bnw.png"
+                    alt="SHU logo"
+                    width={330}
+                    height={330}
+                    className="w-60 h-auto"
+                />
+
+                <div className="flex items-end h-full gap-5 pr-6 pb-1">
+                    <button className="rounded-md px-6 py-3 text-xl font-bold text-white bg-pink-900 transition">
+                        Activity
+                    </button>
+
+                    <button className="rounded-md px-6 py-3 text-xl font-bold text-white hover:bg-pink-900 transition"
+                        onClick={handleUsers}>
+                        Users
+                    </button>
+
+                    <LogoutButton />
+                </div>
+            </nav>
+            <div className="flex border-2 h-full">
+
+                <div className="flex flex-row h-full border-2 w-full border-amber-400">
+                    <div className="w-full border-2 border-red-500">
+
+                    </div>
+                    <div className="w-full border-2 border-blue-400">
+
+                    </div>
+                </div>
             </div>
-        </main>
+            <div className="h-full border-2 border-green-400">
+
+            </div>
+        </div>
     )
 }
