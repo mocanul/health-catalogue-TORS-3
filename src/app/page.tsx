@@ -7,24 +7,24 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <nav className="flex items-center justify-between border-b bg-[#B80050]">
-        <img alt="Sheffield Hallam: Knowledge Applied" className="w-25 md:w-30 lg:w-40" src="/SHU_logo_bnw.png"/>
+        <img alt="Sheffield Hallam: Knowledge Applied" className="w-30 md:w-35 lg:w-40" src="/SHU_logo_bnw.png"/>
 
         <div className="flex items-end h-full pr-4 md:pr-6 lg:pr-6 pb-1">
           <Link 
             href="https://www.shu.ac.uk/myhallam"
-            className="rounded-md :px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
             My Hallam
           </Link>
 
           <Link
             href="https://www.shu.ac.uk/myhallam/support-at-hallam/tors"
-            className="rounded-md px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
             About
           </Link>
 
           <Link
             href="/login"
-            className="rounded-md px-6 py-3 ml-10font-bold text-white bg-pink-950 hover:bg-pink-900 transition"
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 ml-10font-bold text-white bg-pink-950 hover:bg-pink-900 transition"
           >
             Login
           </Link>
