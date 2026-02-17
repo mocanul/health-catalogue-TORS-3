@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
         const email = normalizeEmail(parsed.data.email);
         const password = parsed.data.password;
-        const ipAddress = getClientIp(req);
+        const ip_address = getClientIp(req);
 
         //before verifying password, check rate limit
         const rateLimit = await checkLoginRateLimit(email);
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
             await prisma.loginAttempt.create({
                 data: {
                     email,
-                    ipAddress,
+                    ip_address,
                     success: false,
                 },
             });
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
             await prisma.loginAttempt.create({
                 data: {
                     email,
-                    ipAddress,
+                    ip_address,
                     success: false,
                 },
             });
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         await prisma.loginAttempt.create({
             data: {
                 email,
-                ipAddress,
+                ip_address,
                 success: true,
             },
         });

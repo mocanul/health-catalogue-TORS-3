@@ -15,23 +15,23 @@ export function hashToken(token: string): string {
 }
 
 //creates session in database, returns plain session token
-export async function createSession(userId: string): Promise<string> {
+export async function createSession(user_id: number): Promise<string> {
 
     //create token
     const token = generateSessionToken()
 
     //hashtoken
-    const tokenHash = hashToken(token)
+    const token_hash = hashToken(token)
 
     //set session expiry time to 1 hour
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60)
+    const expires_at = new Date(Date.now() + 1000 * 60 * 60)
 
     //create session in database
     await prisma.session.create({
         data: {
-            userId,
-            tokenHash,
-            expiresAt,
+            user_id,
+            token_hash,
+            expires_at,
         },
     })
 
@@ -44,16 +44,16 @@ export async function createSession(userId: string): Promise<string> {
 export async function validateSession(token: string) {
 
     //hash plain session token from cookie
-    const tokenHash = hashToken(token)
+    const token_hash = hashToken(token)
 
     //find user_id where tokenHash
     const session = await prisma.session.findUnique({
-        where: { tokenHash },
+        where: { token_hash },
         include: { user: true },
     })
 
     //if session doesn't exist, is revoked, is expired, is innactive, return null
-    if (!session || session.revoked || session.expiresAt < new Date() || !session.user.isActive) {
+    if (!session || session.revoked || session.expires_at < new Date() || !session.user.is_active) {
         return null
     }
 

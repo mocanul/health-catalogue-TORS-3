@@ -30,13 +30,13 @@ export async function checkLoginRateLimit(
 
         //oldest attempt will be the last of the 5 attempts taken from db
         orderBy: {
-            attemptedAt: "desc",
+            attempted_at: "desc",
         },
 
         //only extracts 5 failed login attempts
         take: maxAttempts,
         select: {
-            attemptedAt: true,
+            attempted_at: true,
         },
     });
 
@@ -47,7 +47,7 @@ export async function checkLoginRateLimit(
 
     //if the oldest login attempt out of all 5 is less then 5 minutes ago
     //calculate when the lock should expire based on the oldest attempt
-    const oldestOfLastFive = fails[fails.length - 1].attemptedAt;
+    const oldestOfLastFive = fails[fails.length - 1].attempted_at;
 
     //calculates 5 minutes from oldest attempt
     const lockUntil = new Date(oldestOfLastFive.getTime() + lockMinutes * 60_000);

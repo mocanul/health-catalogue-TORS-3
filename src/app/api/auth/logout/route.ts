@@ -11,11 +11,11 @@ export async function POST() {
         const token = cookieStore.get("session")?.value
 
         if (token) {
-            const tokenHash = hashToken(token)
+            const token_hash = hashToken(token)
 
             //make session revoked true
             await prisma.session.updateMany({
-                where: { tokenHash },
+                where: { token_hash },
                 data: { revoked: true },
             })
         }
