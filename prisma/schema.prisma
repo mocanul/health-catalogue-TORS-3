@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  id           Int        @id @default(autoincrement())
-  first_name   String?    @db.VarChar(255)
-  last_name    String?    @db.VarChar(255)
-  email        String     @unique @db.VarChar(255)
-  role         UserRole
-  is_active    Boolean    @default(true)
-  created_at   DateTime   @default(now())
-  passwordHash String
-  auditLogs    AuditLog[]
-  bookings     Booking[]
-  sessions     Session[]
+  id                 Int                  @id @default(autoincrement())
+  first_name         String?              @db.VarChar(255)
+  last_name          String?              @db.VarChar(255)
+  email              String               @unique @db.VarChar(255)
+  role               UserRole
+  is_active          Boolean              @default(true)
+  created_at         DateTime             @default(now())
+  passwordHash       String
+  auditLogs          AuditLog[]
+  bookings           Booking[]
+  PasswordSetupToken PasswordSetupToken[]
+  sessions           Session[]
 }
 
 model AuditLog {
@@ -112,6 +113,19 @@ model Session {
   revoked    Boolean  @default(false)
   created_at DateTime @default(now())
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([expires_at])
+  @@index([user_id])
+}
+
+model PasswordSetupToken {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([expires_at])
   @@index([user_id])
