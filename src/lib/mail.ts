@@ -28,29 +28,27 @@ requiredEnv("SMTP_PASS")
 requiredEnv("SMTP_FROM")
 
 //function for sending email
-//we can have multiple function for multiple purposes
+//we can have multiple email functions for different purposes
 export async function sendAccountCreatedEmail(params: {
     email: string
     firstName: string
+    setupLink: string
+    expires_at: Date
 }) {
-    const { email, firstName } = params
+    const { email, firstName, setupLink } = params
 
     await transporter.sendMail({
         from: process.env.SMTP_FROM,
         to: email,
-        subject: "Your TORS account has been created",
-
-        //email is formatted with html
+        subject: "Finish TORS account setup",
         html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-            <h2>Welcome to TORS</h2>
-            <p>Hello ${firstName ?? "User"},</p>
-            <p>Your account has been successfully created.</p>
-            <p>You can now log in using your university email.</p>
-            <br/>
-            <p>Regards,<br/>TORS Team</p>
-        </div>
-        `,
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <p>Hello ${firstName ?? "User"},</p>
+        <p>Your account has been created. Finish your account setup using this link: <a href="${setupLink}">Set your password</a></p>
+      </div>
+    `,
     })
 }
+
+
 

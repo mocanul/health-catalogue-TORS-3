@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/auth/hash"
 import { Prisma } from "@prisma/client"
 import crypto from "crypto"
 import { sendAccountCreatedEmail } from "@/lib/mail"
+import { createPasswordSetupToken } from "@/lib/auth/passwordSetup"
 
 //shape of user account 
 const userSchema = z.object({
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
             data: {
                 first_name: data.firstName,
                 last_name: data.lastName,
-                email: data.email.toLowerCase(),
+                email: data.email.toLowerCase().trim(),
                 role: data.role,
                 passwordHash,
             },
@@ -51,14 +52,21 @@ export async function POST(req: NextRequest) {
             },
         })
 
-        try {
-            await sendAccountCreatedEmail({
-                email: user.email,
-                firstName: user.first_name ?? "User",
-            })
-        } catch (emailError) {
-            console.error("Email sending failed:", emailError)
-        }
+
+        const { rawToken, expires_at } = await createPasswordSetupToken(user.id, 30)
+
+        //base url link from .env file
+        const baseUrl = process.env.APP_BASE_URL
+
+        //form complete url using raw token created in the password setup function
+        const link = `${baseUrl}/login/first-login?token=${encodeURIComponent(rawToken)}`
+
+        await sendAccountCreatedEmail({
+            email: user.email,
+            firstName: user.first_name ?? "User",
+            setupLink: link,
+            expires_at,
+        })
 
         return NextResponse.json(user, { status: 201 })
     } catch (err) {
