@@ -7,128 +7,128 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model audit_log {
-  id           Int      @id @default(autoincrement())
-  entity_type  String   @db.VarChar(100)
-  entity_id    Int
-  action       String   @db.VarChar(100)
-  performed_by Int
-  old_value    Json?
-  new_value    Json?
-  created_at   DateTime @default(now())
-  user         user     @relation(fields: [performed_by], references: [id])
+model User {
+  id              Int        @id @default(autoincrement())
+  firstName       String?    @map("first_name") @db.VarChar(255)
+  lastName        String?    @map("last_name") @db.VarChar(255)
+  email           String     @unique @db.VarChar(255)
+  passwordHash    String
+  role            UserRole
+  isActive        Boolean    @default(true) @map("is_active")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  auditLogs       AuditLog[] @relation("AuditPerformedBy")
+  bookingsCreated Booking[]  @relation("BookingsCreated")
+  sessions        Session[]
 
-  @@index([entity_type, entity_id])
-  @@index([performed_by])
+  @@map("user")
 }
 
-model booking {
-  id           Int            @id @default(autoincrement())
-  created_by   Int
-  room_id      Int
-  description  String?
-  booking_date DateTime       @db.Date
-  start_time   DateTime       @db.Time(6)
-  end_time     DateTime       @db.Time(6)
-  status       BookingStatus  @default(DRAFT)
-  created_at   DateTime       @default(now())
-  updated_at   DateTime
-  user         user           @relation(fields: [created_by], references: [id])
-  room         room           @relation(fields: [room_id], references: [id])
-  booking_item booking_item[]
+model Room {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(255)
+  building  String?     @db.VarChar(255)
+  createdAt DateTime    @default(now()) @map("created_at")
+  bookings  Booking[]
+  equipment Equipment[]
 
-  @@index([booking_date])
-  @@index([created_by])
-  @@index([room_id])
+  @@map("room")
 }
 
-model booking_item {
-  id                 Int       @id @default(autoincrement())
-  booking_id         Int
-  equipment_id       Int
-  quantity_requested Int
-  quantity_allocated Int       @default(0)
-  booking            booking   @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  equipment          equipment @relation(fields: [equipment_id], references: [id])
+model Equipment {
+  id                Int           @id @default(autoincrement())
+  name              String        @db.VarChar(255)
+  description       String?
+  category          String?       @db.VarChar(255)
+  quantityAvailable Int           @map("quantity_available")
+  fixedRoomId       Int?          @map("fixed_room_id")
+  isActive          Boolean       @default(true) @map("is_active")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  bookingItems      BookingItem[]
+  fixedRoom         Room?         @relation(fields: [fixedRoomId], references: [id])
 
-  @@unique([booking_id, equipment_id])
-  @@index([equipment_id])
+  @@index([fixedRoomId])
+  @@map("equipment")
 }
 
-model equipment {
-  id                 Int            @id @default(autoincrement())
-  name               String         @db.VarChar(255)
-  description        String?
-  category           String?        @db.VarChar(255)
-  quantity_available Int
-  fixed_room_id      Int?
-  is_active          Boolean        @default(true)
-  created_at         DateTime       @default(now())
-  booking_item       booking_item[]
-  room               room?          @relation(fields: [fixed_room_id], references: [id])
+model Booking {
+  id          Int           @id @default(autoincrement())
+  createdById Int           @map("created_by")
+  roomId      Int           @map("room_id")
+  description String?
+  bookingDate DateTime      @map("booking_date") @db.Date
+  startTime   DateTime      @map("start_time") @db.Time(6)
+  endTime     DateTime      @map("end_time") @db.Time(6)
+  status      BookingStatus @default(DRAFT)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  createdBy   User          @relation("BookingsCreated", fields: [createdById], references: [id])
+  room        Room          @relation(fields: [roomId], references: [id])
+  items       BookingItem[]
 
-  @@index([fixed_room_id])
+  @@index([createdById])
+  @@index([roomId])
+  @@index([bookingDate])
+  @@map("booking")
 }
 
-model login_attempt {
-  id           Int      @id @default(autoincrement())
-  attempted_at DateTime @default(now()) @db.Timestamptz(6)
-  email        String   @db.VarChar(320)
-  ip_address   String   @db.VarChar(64)
-  success      Boolean
+model BookingItem {
+  id                Int       @id @default(autoincrement())
+  bookingId         Int       @map("booking_id")
+  equipmentId       Int       @map("equipment_id")
+  quantityRequested Int       @map("quantity_requested")
+  quantityAllocated Int       @default(0) @map("quantity_allocated")
+  booking           Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  equipment         Equipment @relation(fields: [equipmentId], references: [id])
 
-  @@index([email, attempted_at(sort: Desc)])
-  @@index([ip_address, attempted_at(sort: Desc)])
+  @@unique([bookingId, equipmentId])
+  @@index([equipmentId])
+  @@map("booking_item")
 }
 
-model room {
-  id         Int         @id @default(autoincrement())
-  name       String      @db.VarChar(255)
-  building   String?     @db.VarChar(255)
-  created_at DateTime    @default(now())
-  booking    booking[]
-  equipment  equipment[]
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  entityType  String   @map("entity_type") @db.VarChar(100)
+  entityId    Int      @map("entity_id")
+  action      String   @db.VarChar(100)
+  performedBy Int      @map("performed_by")
+  oldValue    Json?    @map("old_value")
+  newValue    Json?    @map("new_value")
+  createdAt   DateTime @default(now()) @map("created_at")
+  performer   User     @relation("AuditPerformedBy", fields: [performedBy], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([performedBy])
+  @@map("audit_log")
 }
 
-model session {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  token_hash String   @unique
-  expires_at DateTime
-  revoked    Boolean  @default(false)
-  created_at DateTime @default(now())
-  user       user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([expires_at])
-  @@index([user_id])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("session")
 }
 
-model user {
-  id           Int         @id @default(autoincrement())
-  first_name   String?     @db.VarChar(255)
-  last_name    String?     @db.VarChar(255)
-  email        String      @unique @db.VarChar(255)
-  role         UserRole
-  is_active    Boolean     @default(true)
-  created_at   DateTime    @default(now())
-  passwordHash String
-  audit_log    audit_log[]
-  booking      booking[]
-  session      session[]
-}
+model LoginAttempt {
+  id          Int      @id @default(autoincrement())
+  attemptedAt DateTime @default(now()) @map("attempted_at") @db.Timestamptz(6)
+  email       String   @db.VarChar(320)
+  ipAddress   String   @map("ip_address") @db.VarChar(64)
+  success     Boolean
 
-enum BookingStatus {
-  DRAFT
-  SUBMITTED
-  APPROVED
-  REJECTED
-  CANCELLED
-  COMPLETED
+  @@index([email, attemptedAt(sort: Desc)])
+  @@index([ipAddress, attemptedAt(sort: Desc)])
+  @@map("login_attempt")
 }
 
 enum UserRole {
   ADMIN
   TECHNICIAN
-  LECTURER
-  STUDENT
+  ADMIN
 }
