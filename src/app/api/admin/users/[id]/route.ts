@@ -12,6 +12,7 @@ const PatchSchema = z.object({
     role: z.enum(["ADMIN", "TECHNICIAN", "STAFF", "STUDENT"]).optional(),
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapUserToApi(u: any) {
     return {
         id: String(u.id),
@@ -85,6 +86,7 @@ export async function PATCH(
         });
 
         return NextResponse.json(mapUserToApi(updated), { status: 200 });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
         //user not found error
         if (err?.code === "P2025") {

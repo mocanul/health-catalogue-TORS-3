@@ -1,7 +1,7 @@
 "use client"
-
 import { useRouter } from "next/navigation"
 
+//end session for user and take back to landing page
 export default function LogoutButton() {
     const router = useRouter()
 
@@ -10,7 +10,7 @@ export default function LogoutButton() {
             method: "POST",
         })
 
-        router.push("/login")
+        router.push("/")
         router.refresh()
     }
 

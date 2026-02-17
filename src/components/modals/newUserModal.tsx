@@ -33,7 +33,7 @@ export default function AddUser({ open, onClose }: Props) {
                     lastName,
                     email,
                     role,
-                    password: "temporary", // backend will replace if you generate internally
+                    password: "temporary",
                 }),
             });
 
