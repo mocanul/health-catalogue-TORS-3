@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
                 const data: User[] = await res.json();
                 setUsers(data);
 
-                console.log(data); // optional
+                console.log(data);
             } catch (error) {
                 console.error(error);
             }
@@ -146,7 +146,7 @@ export default function AdminUsersPage() {
                                             <td className="p-3 text-center border-gray-500">
                                                 <button className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm"
                                                     onClick={() => openEdit(user)}>
-                                                    Edit
+                                                    View
                                                 </button>
                                             </td>
                                         </tr>

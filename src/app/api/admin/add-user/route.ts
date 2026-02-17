@@ -4,6 +4,7 @@ import { z } from "zod"
 import { hashPassword } from "@/lib/auth/hash"
 import { Prisma } from "@prisma/client"
 import crypto from "crypto"
+import { sendAccountCreatedEmail } from "@/lib/mail"
 
 //shape of user account 
 const userSchema = z.object({
@@ -49,6 +50,15 @@ export async function POST(req: NextRequest) {
                 created_at: true,
             },
         })
+
+        try {
+            await sendAccountCreatedEmail({
+                email: user.email,
+                firstName: user.first_name ?? "User",
+            })
+        } catch (emailError) {
+            console.error("Email sending failed:", emailError)
+        }
 
         return NextResponse.json(user, { status: 201 })
     } catch (err) {

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
+//shape of user returned from API
+//should be aligned with the Prisma select()
 type User = {
     id: string;
     first_name: string;
@@ -12,55 +14,55 @@ type User = {
 };
 
 type Props = {
-    open: boolean;
+    open: boolean; //controls modal visibility (True = open, False = closed)
     onClose: () => void;
-    user: User | null; // selected user
-    onSaved?: (updated: User) => void; // optional: update UI without refetch
+    user: User | null; //stores the currently selected user from users table
+    onSaved?: (updated: User) => void; //update UI without refresh
 };
 
-const ROLE_OPTIONS = [
-    { value: "ADMIN", label: "Admin" },
+//role options for accounts
+//excluding admin
+const roleOptions = [
     { value: "TECHNICIAN", label: "Technician" },
-    { value: "LECTURER", label: "Lecturer" },
+    { value: "STAFF", label: "Lecturer" },
     { value: "STUDENT", label: "Student" },
 ];
 
 export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
+    //user inputs
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
-    const [role, setRole] = useState(ROLE_OPTIONS[0].value);
+    const [role, setRole] = useState(roleOptions[0].value);
 
-    const [saving, setSaving] = useState(false);
+    //client states
+    const [saving, setSaving] = useState(false); //changes save button to saving state, preventing double saving
     const [error, setError] = useState<string | null>(null);
 
+    //only render modal when Open == true and User exists
     const canRender = open && user;
 
-    // Prefill whenever the selected user changes / modal opens
+    //prefill when modal opens with selected user information
     useEffect(() => {
         if (!open || !user) return;
         setFirstName(user.first_name ?? "");
         setLastName(user.last_name ?? "");
         setEmail(user.email ?? "");
-        setRole(user.role ?? ROLE_OPTIONS[0].value);
+        setRole(user.role ?? roleOptions[0].value);
         setError(null);
     }, [open, user]);
 
-    // Close on ESC
-    useEffect(() => {
-        if (!open) return;
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [open, onClose]);
-
     const emailLooksValid = useMemo(() => {
-        // simple client validation (server must still validate)
+        //simple client validation (server must still validate)
+        /*
+        *TODO: Add zod validation
+        *
+        */
         return /^\S+@\S+\.\S+$/.test(email.trim());
     }, [email]);
 
+
+    //function for when submitting form
     async function handleSave(e: React.FormEvent) {
         e.preventDefault();
         if (!user) return;
@@ -68,6 +70,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
         setSaving(true);
         setError(null);
 
+        //calling user/[id] api 
         try {
             const res = await fetch(`/api/admin/users/${user.id}`, {
                 method: "PATCH",
@@ -80,6 +83,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                 }),
             });
 
+            //parse JSON
             const payload = await res.json().catch(() => null);
 
             if (!res.ok) {
@@ -90,7 +94,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                 throw new Error(msg);
             }
 
-            // Expecting the updated user back
+            //expects updated user from backend so parent table can update without refetch
             const updated: User = payload;
             onSaved?.(updated);
             onClose();
@@ -101,6 +105,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
         }
     }
 
+    //prevent render when closed
     if (!canRender) return null;
 
     return (
@@ -135,7 +140,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                 </div>
 
                 <form onSubmit={handleSave} className="px-4 py-4">
-                    {/* First + Last name */}
+                    {/* first and last name */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">
@@ -164,7 +169,6 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                         </div>
                     </div>
 
-                    {/* Email + Role (role smaller, on right) */}
                     <div className="mt-3 grid grid-cols-[1fr_140px] gap-3">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">
@@ -192,7 +196,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                                 onChange={(e) => setRole(e.target.value)}
                                 className="mt-1 w-full cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
                             >
-                                {ROLE_OPTIONS.map((r) => (
+                                {roleOptions.map((r) => (
                                     <option key={r.value} value={r.value}>
                                         {r.label}
                                     </option>
