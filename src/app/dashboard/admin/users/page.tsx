@@ -8,6 +8,8 @@ import AddUser from "@/components/modals/newUserModal"
 
 type User = {
     id: string;
+    firstName: string,
+    lastName: string,
     email: string;
     role: string;
 }
@@ -129,7 +131,7 @@ export default function AdminUsersPage() {
                                     {users.map((user) => (
                                         <tr key={user.id} className="border-b">
                                             <td className="p-3 text-center ">{user.id}</td>
-                                            <td className="p-3 text-center ">FName LName</td>
+                                            <td className="p-3 text-center ">{user.firstName} {user.lastName}</td>
                                             <td className="p-3 text-center border-gray-500">{user.email}</td>
                                             <td className="p-3 text-center border-gray-500">{user.role}</td>
                                             <td className="p-3 text-center border-gray-500">

@@ -8,49 +8,137 @@ datasource db {
 }
 
 model User {
-  id           String  @id @default(uuid())
-  email        String  @unique
-  passwordHash String
-  role         Role
-  isActive     Boolean @default(true)
+  id              Int        @id @default(autoincrement())
+  firstName       String?    @map("first_name") @db.VarChar(255)
+  lastName        String?    @map("last_name") @db.VarChar(255)
+  email           String     @unique @db.VarChar(255)
+  passwordHash    String
+  role            UserRole
+  isActive        Boolean    @default(true) @map("is_active")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  auditLogs       AuditLog[] @relation("AuditPerformedBy")
+  bookingsCreated Booking[]  @relation("BookingsCreated")
+  sessions        Session[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("user")
+}
 
-  sessions Session[]
+model Room {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(255)
+  building  String?     @db.VarChar(255)
+  createdAt DateTime    @default(now()) @map("created_at")
+  bookings  Booking[]
+  equipment Equipment[]
+
+  @@map("room")
+}
+
+model Equipment {
+  id                Int           @id @default(autoincrement())
+  name              String        @db.VarChar(255)
+  description       String?
+  category          String?       @db.VarChar(255)
+  quantityAvailable Int           @map("quantity_available")
+  fixedRoomId       Int?          @map("fixed_room_id")
+  isActive          Boolean       @default(true) @map("is_active")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  bookingItems      BookingItem[]
+  fixedRoom         Room?         @relation(fields: [fixedRoomId], references: [id])
+
+  @@index([fixedRoomId])
+  @@map("equipment")
+}
+
+model Booking {
+  id          Int           @id @default(autoincrement())
+  createdById Int           @map("created_by")
+  roomId      Int           @map("room_id")
+  description String?
+  bookingDate DateTime      @map("booking_date") @db.Date
+  startTime   DateTime      @map("start_time") @db.Time(6)
+  endTime     DateTime      @map("end_time") @db.Time(6)
+  status      BookingStatus @default(DRAFT)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  createdBy   User          @relation("BookingsCreated", fields: [createdById], references: [id])
+  room        Room          @relation(fields: [roomId], references: [id])
+  items       BookingItem[]
+
+  @@index([createdById])
+  @@index([roomId])
+  @@index([bookingDate])
+  @@map("booking")
+}
+
+model BookingItem {
+  id                Int       @id @default(autoincrement())
+  bookingId         Int       @map("booking_id")
+  equipmentId       Int       @map("equipment_id")
+  quantityRequested Int       @map("quantity_requested")
+  quantityAllocated Int       @default(0) @map("quantity_allocated")
+  booking           Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  equipment         Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@unique([bookingId, equipmentId])
+  @@index([equipmentId])
+  @@map("booking_item")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  entityType  String   @map("entity_type") @db.VarChar(100)
+  entityId    Int      @map("entity_id")
+  action      String   @db.VarChar(100)
+  performedBy Int      @map("performed_by")
+  oldValue    Json?    @map("old_value")
+  newValue    Json?    @map("new_value")
+  createdAt   DateTime @default(now()) @map("created_at")
+  performer   User     @relation("AuditPerformedBy", fields: [performedBy], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([performedBy])
+  @@map("audit_log")
 }
 
 model Session {
-  id        String   @id @default(uuid())
-  userId    String
-  tokenHash String   @unique
-  expiresAt DateTime
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
   revoked   Boolean  @default(false)
-
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
+  @@map("session")
 }
 
 model LoginAttempt {
-  id          String   @id @default(uuid())
-  attemptedAt DateTime @default(now()) @db.Timestamptz(6)
-
-  email     String @db.VarChar(320)
-  ipAddress String @db.VarChar(64)
-
-  success Boolean
+  id          Int      @id @default(autoincrement())
+  attemptedAt DateTime @default(now()) @map("attempted_at") @db.Timestamptz(6)
+  email       String   @db.VarChar(320)
+  ipAddress   String   @map("ip_address") @db.VarChar(64)
+  success     Boolean
 
   @@index([email, attemptedAt(sort: Desc)])
   @@index([ipAddress, attemptedAt(sort: Desc)])
+  @@map("login_attempt")
 }
 
-enum Role {
-  STUDENT
-  STAFF
-  TECHNICIAN
+enum UserRole {
   ADMIN
+  TECHNICIAN
+  LECTURER
+  STUDENT
+}
+
+enum BookingStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
 }
