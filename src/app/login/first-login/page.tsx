@@ -67,6 +67,7 @@ export default function FirstLogin() {
 
             setDone(true);
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err?.message || "Something went wrong.");
         } finally {
@@ -76,6 +77,7 @@ export default function FirstLogin() {
     return (
         <div className="flex min-h-screen flex-col">
             <nav className="flex items-center justify-between border-b bg-[#B80050]">
+                {/*eslint-disable-next-line @next/next/no-img-element*/}
                 <img alt="Sheffield Hallam: Knowledge Applied" className="w-30 md:w-35 lg:w-40" src="/SHU_logo_bnw.png" />
             </nav>
 
