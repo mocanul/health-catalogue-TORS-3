@@ -1,12 +1,62 @@
 "use client";
 
+import { useState } from "react";
+
 type Props = {
     open: boolean;
     onClose: () => void;
 };
 
 export default function AddUser({ open, onClose }: Props) {
+
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
+    const [role, setRole] = useState("STUDENT");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     if (!open) return null;
+
+    async function handleSubmit() {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const res = await fetch("/api/admin/add-user", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    firstName,
+                    lastName,
+                    email,
+                    role,
+                    password: "temporary", // backend will replace if you generate internally
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Failed to create user");
+                return;
+            }
+
+            //reset fields when opening modal
+            setFirstName("");
+            setLastName("");
+            setEmail("");
+            setRole("STUDENT");
+
+            onClose();
+        } catch {
+            setError("Server error");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -27,38 +77,67 @@ export default function AddUser({ open, onClose }: Props) {
 
                         <div>
                             <label className="block text-xs font-medium mb-1">First Name</label>
-                            <input className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400" />
+                            <input
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400"
+                            />
                         </div>
 
                         <div>
                             <label className="block text-xs font-medium mb-1">Last Name</label>
-                            <input className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400" />
+                            <input
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400"
+                            />
                         </div>
 
                         <div className="col-span-2 grid grid-cols-3 gap-3">
                             <div className="col-span-2">
                                 <label className="block text-xs font-medium mb-1">Email</label>
-                                <input type="email" className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400" />
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400"
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-medium mb-1">Role</label>
-                                <select className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400 bg-white">
-                                    <option value="donor">Student</option>
-                                    <option value="charity">Staff</option>
-                                    <option value="admin">Technician</option>
+                                <select
+                                    value={role}
+                                    onChange={(e) => setRole(e.target.value)}
+                                    className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400 bg-white"
+                                >
+                                    <option value="STUDENT">Student</option>
+                                    <option value="LECTURER">Technician</option>
+                                    <option value="TECHNICIAN">Staff</option>
                                 </select>
                             </div>
                         </div>
 
                     </div>
 
+                    {error && (
+                        <p className="text-red-600 text-sm mt-2">{error}</p>
+                    )}
+
                     <div className="flex justify-end gap-2 mt-4">
-                        <button onClick={onClose} className="px-3 py-1.5 text-sm border rounded-md">
+                        <button
+                            onClick={onClose}
+                            className="px-3 py-1.5 text-sm border rounded-md"
+                            disabled={loading}
+                        >
                             Cancel
                         </button>
-                        <button className="px-3 py-1.5 text-sm bg-[#B80050] text-white rounded-md hover:bg-pink-900 transition">
-                            Create
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="px-3 py-1.5 text-sm bg-[#B80050] text-white rounded-md hover:bg-pink-900 transition disabled:opacity-50"
+                        >
+                            {loading ? "Creating..." : "Create"}
                         </button>
                     </div>
                 </div>

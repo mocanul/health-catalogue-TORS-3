@@ -8,8 +8,8 @@ import AddUser from "@/components/modals/newUserModal"
 
 type User = {
     id: string;
-    firstName: string,
-    lastName: string,
+    first_name: string,
+    last_name: string,
     email: string;
     role: string;
 }
@@ -113,7 +113,7 @@ export default function AdminUsersPage() {
                         </div>
                     </div>
 
-                    {/* Table wrapper controls width + scroll */}
+                    {/* table wrapper controls width + scroll */}
                     <div className="w-full overflow-x-auto">
                         <div className="max-h-130 overflow-y-auto">
                             <table className="w-full border">
@@ -131,7 +131,7 @@ export default function AdminUsersPage() {
                                     {users.map((user) => (
                                         <tr key={user.id} className="border-b">
                                             <td className="p-3 text-center ">{user.id}</td>
-                                            <td className="p-3 text-center ">{user.firstName} {user.lastName}</td>
+                                            <td className="p-3 text-center ">{user.first_name} {user.last_name}</td>
                                             <td className="p-3 text-center border-gray-500">{user.email}</td>
                                             <td className="p-3 text-center border-gray-500">{user.role}</td>
                                             <td className="p-3 text-center border-gray-500">
