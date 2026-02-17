@@ -24,15 +24,14 @@ export default function Home() {
 
           <Link
             href="/login"
-            className="rounded-md px-2 md:px-6 lg:px-6 py-3 ml-10font-bold text-white bg-pink-950 hover:bg-pink-900 transition"
-          >
+            className="rounded-md px-2 md:px-6 lg:px-6 py-3 ml-10font-bold text-white bg-pink-950 hover:bg-pink-900 transition">
             Login
           </Link>
         </div>
       </nav>
 
       <main className="flex-1 flex flex-col items-center justify-center bg-gray-50 px-4">
-        <img alt="T.O.R.S" className="w-50 md:w-55 lg:w-60" src="/TORS_logo.png"/>
+        <img alt="T.O.R.S" className="w-50 md:w-55 lg:w-60 py-6" src="/TORS_logo.png"/>
 
         <div className="w-75 md:w-100 lg:w-125 rounded-xl bg-white p-12 shadow-2xl border flex flex-col items-center justify-center text-center">
           <h1 className="text-lg md:text-xl lg:text-2xl font-semibold text-slate-800 mb-4">
