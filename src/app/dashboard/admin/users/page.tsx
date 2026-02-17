@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react";
 import AddUser from "@/components/modals/newUserModal"
+import EditUserModal from "@/components/modals/editUserModal"
 
 type User = {
     id: string;
@@ -14,11 +15,14 @@ type User = {
     role: string;
 }
 
+
 export default function AdminUsersPage() {
     const router = useRouter()
     const [users, setUsers] = useState<User[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     useEffect(() => {
         async function fetchUsers() {
@@ -45,6 +49,11 @@ export default function AdminUsersPage() {
 
         router.push("/dashboard/admin")
         router.refresh()
+    }
+
+    function openEdit(user: User) {
+        setSelectedUser(user);
+        setIsEditOpen(true);
     }
 
     return (
@@ -135,7 +144,8 @@ export default function AdminUsersPage() {
                                             <td className="p-3 text-center border-gray-500">{user.email}</td>
                                             <td className="p-3 text-center border-gray-500">{user.role}</td>
                                             <td className="p-3 text-center border-gray-500">
-                                                <button className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm">
+                                                <button className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm"
+                                                    onClick={() => openEdit(user)}>
                                                     Edit
                                                 </button>
                                             </td>
@@ -159,6 +169,16 @@ export default function AdminUsersPage() {
             <AddUser
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+            />
+
+            <EditUserModal
+                open={isEditOpen}
+                user={selectedUser}
+                onClose={() => setIsEditOpen(false)}
+                onSaved={(updated) => {
+                    //update table without refetch
+                    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+                }}
             />
         </div>
     )
