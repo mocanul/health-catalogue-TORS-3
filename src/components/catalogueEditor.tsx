@@ -42,7 +42,7 @@ export default async function Catalogue() {
                                             <th className="p-3 text-center border-gray-200">Description</th>
                                             <th className="p-3 text-center border-gray-200">Category</th>
                                             <th className="p-3 text-center border-gray-200">Quantity Available</th>
-                                            <th className="p-3 text-center border-gray-200">Add to Order</th>
+                                            <th className="p-3 text-center border-gray-200">Edit</th>
                                         </tr>
                                     </thead>
 
@@ -54,7 +54,7 @@ export default async function Catalogue() {
                                         <td className="p-3 text-center border-gray-500">{item.category}</td>
                                         <td className="p-3 text-center border-gray-500">{item.quantity_available}</td>
                                         <td className="p-3 text-center border-gray-500"><button className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm">
-                                                Add to Cart
+                                                Edit
                                             </button>
                                         </td>
                                         </tr>
