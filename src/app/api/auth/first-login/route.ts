@@ -8,8 +8,27 @@ import { hashPassword } from "@/lib/auth/hash"
 const Schema = z.object({
     token: z.string(),
 
-    //TODO: add more secure password constraints
-    password: z.string().min(8).max(50),
+    //password criteria
+    password: z
+        .string()
+        .min(12, "Password must be at least 12 characters")
+        .max(50, "Password must not exceed 50 characters")
+        .refine(
+            (password) => /[A-Z]/.test(password),
+            "Password must contain at least one uppercase letter"
+        )
+        .refine(
+            (password) => /[a-z]/.test(password),
+            "Password must contain at least one lowercase letter"
+        )
+        .refine(
+            (password) => /[0-9]/.test(password),
+            "Password must contain at least one number"
+        )
+        .refine(
+            (password) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+            "Password must contain at least one special character"
+        ),
 })
 
 export async function POST(req: NextRequest) {

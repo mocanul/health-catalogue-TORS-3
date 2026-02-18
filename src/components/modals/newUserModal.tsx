@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type Props = {
     open: boolean;
@@ -15,6 +15,17 @@ export default function AddUser({ open, onClose }: Props) {
     const [role, setRole] = useState("STUDENT");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Reset fields when modal opens
+    useEffect(() => {
+        if (open) {
+            setFirstName("");
+            setLastName("");
+            setEmail("");
+            setRole("STUDENT");
+            setError(null);
+        }
+    }, [open]);
 
     if (!open) return null;
 
@@ -112,8 +123,8 @@ export default function AddUser({ open, onClose }: Props) {
                                     className="w-full px-2 py-1.5 border rounded-md text-sm focus:ring-2 focus:ring-pink-400 bg-white"
                                 >
                                     <option value="STUDENT">Student</option>
-                                    <option value="LECTURER">Technician</option>
-                                    <option value="TECHNICIAN">Staff</option>
+                                    <option value="STAFF">Staff</option>
+                                    <option value="TECHNICIAN">Technician</option>
                                 </select>
                             </div>
                         </div>

@@ -36,6 +36,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
     const [role, setRole] = useState(roleOptions[0].value);
 
     //client states
+    const [isEditMode, setIsEditMode] = useState(false); //toggle between view and edit mode
     const [saving, setSaving] = useState(false); //changes save button to saving state, preventing double saving
     const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +51,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
         setEmail(user.email ?? "");
         setRole(user.role ?? roleOptions[0].value);
         setError(null);
+        setIsEditMode(false); //reset to view mode when modal opens
     }, [open, user]);
 
     const emailLooksValid = useMemo(() => {
@@ -124,19 +126,30 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                 aria-labelledby="edit-user-title"
                 className="relative z-10 w-105 max-w-[92vw] rounded-lg bg-white shadow-xl"
             >
-                <div className="flex items-center justify-between border-b px-4 py-3">
+                <div className="flex items-center justify-between border-b px-4 py-3 bg-pink-50">
                     <h2 id="edit-user-title" className="text-base font-semibold">
                         Edit user
                     </h2>
 
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="rounded-md p-2 hover:bg-gray-100"
-                        aria-label="Close"
-                    >
-                        <X size={18} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {!isEditMode && (
+                            <button
+                                type="button"
+                                onClick={() => setIsEditMode(true)}
+                                className="rounded-md bg-[#B80050] px-3 py-1.5 text-sm font-medium text-white hover:bg-pink-900"
+                            >
+                                Edit
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="rounded-md p-2 hover:bg-gray-100"
+                            aria-label="Close"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSave} className="px-4 py-4">
@@ -147,9 +160,10 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                                 First name
                             </label>
                             <input
+                                disabled={!isEditMode}
                                 value={firstName}
                                 onChange={(e) => setFirstName(e.target.value)}
-                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="First name"
                                 autoComplete="given-name"
                             />
@@ -160,9 +174,10 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                                 Last name
                             </label>
                             <input
+                                disabled={!isEditMode}
                                 value={lastName}
                                 onChange={(e) => setLastName(e.target.value)}
-                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="Last name"
                                 autoComplete="family-name"
                             />
@@ -175,14 +190,15 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                                 Email
                             </label>
                             <input
+                                disabled={!isEditMode}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="name@shu.ac.uk"
                                 autoComplete="email"
                                 inputMode="email"
                             />
-                            {!emailLooksValid && email.trim().length > 3 && (
+                            {!emailLooksValid && email.trim().length > 3 && isEditMode && (
                                 <p className="mt-1 text-xs text-red-600">Email looks invalid.</p>
                             )}
                         </div>
@@ -192,9 +208,10 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                                 Role
                             </label>
                             <select
+                                disabled={!isEditMode}
                                 value={role}
                                 onChange={(e) => setRole(e.target.value)}
-                                className="mt-1 w-full cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                className="mt-1 w-full cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                             >
                                 {roleOptions.map((r) => (
                                     <option key={r.value} value={r.value}>
@@ -212,22 +229,26 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                     )}
 
                     <div className="mt-5 flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                            disabled={saving}
-                        >
-                            Cancel
-                        </button>
+                        {isEditMode && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditMode(false)}
+                                    className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                                    disabled={saving}
+                                >
+                                    Cancel
+                                </button>
 
-                        <button
-                            type="submit"
-                            className="rounded-md bg-[#B80050] px-4 py-2 text-sm font-medium text-white hover:bg-pink-900 disabled:opacity-60"
-                            disabled={saving || !emailLooksValid}
-                        >
-                            {saving ? "Saving..." : "Save changes"}
-                        </button>
+                                <button
+                                    type="submit"
+                                    className="rounded-md bg-[#B80050] px-4 py-2 text-sm font-medium text-white hover:bg-pink-900 disabled:opacity-60"
+                                    disabled={saving || !emailLooksValid}
+                                >
+                                    {saving ? "Saving..." : "Save changes"}
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     <p className="mt-3 text-xs text-gray-500">

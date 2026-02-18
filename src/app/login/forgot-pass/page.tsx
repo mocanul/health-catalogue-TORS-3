@@ -36,7 +36,7 @@ export default function AskForEmail() {
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-gray-50 px-4">
             {email && (
-                <p className="mb-4 font-bold text-green-600"> If account exists, you will receive an email with activation link shortly.</p>
+                <p className="mb-4 font-bold text-green-600"> If account exists, you will receive an email with link to reset password.</p>
             )}
             <div className="rounded-xl bg-white p-10 shadow-2xl border">
                 <form>
