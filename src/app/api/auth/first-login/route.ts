@@ -8,7 +8,7 @@ import { hashPassword } from "@/lib/auth/hash"
 const Schema = z.object({
     token: z.string(),
 
-    //TODO: Add more secure password constraints
+    //TODO: add more secure password constraints
     password: z.string().min(8).max(50),
 })
 
