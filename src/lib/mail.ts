@@ -1,5 +1,13 @@
 import nodemailer from "nodemailer"
 
+//email signature used in all emails
+const EMAIL_SIGNATURE = `
+<p style="margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1rem;">
+  <p>Kind Regards,<br/>
+  TORS Team</p>
+</p>
+`
+
 //host, port and auth are taken from .env file
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -45,11 +53,13 @@ export async function sendAccountCreatedEmail(params: {
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <p>Hello ${firstName},</p>
         <p>Your account has been created. Finish your account setup using this link: <a href="${setupLink}">Set your password</a></p>
+        ${EMAIL_SIGNATURE}
       </div>
     `,
     })
 }
 
+//email sent when user requests another password setup link
 export async function sendRequestedPasswordSetupEmail(params: {
     email: string
     firstName: string
@@ -67,6 +77,30 @@ export async function sendRequestedPasswordSetupEmail(params: {
         <p>Password setup request bas been received, please see link to setup your password: <a href="${setupLink}">Set your password</a></p>
         <p>Please do not share this link with anyone</p>
         <p>If you did not submit this request, please report this to our team, thank you.</p>
+        ${EMAIL_SIGNATURE}
+      </div>
+    `,
+    })
+}
+
+//email sent when user forgets account password
+export async function sendForgotPasswordRequest(params: {
+    email: string
+    firstName: string
+    setupLink: string
+}) {
+    const { email, firstName, setupLink } = params
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: email,
+        subject: "TORS Password Reset",
+        html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <p>Hello ${firstName},</p>
+        <p>We have received a password reset request. If this wasn't you, please report this to our team.</p>
+        <p>If this was you <a href="${setupLink}">reset your password here.</a></p>
+        <p>Please do not share this link with anyone.</p>
+        ${EMAIL_SIGNATURE}
       </div>
     `,
     })

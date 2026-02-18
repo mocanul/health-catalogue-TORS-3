@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"
 import { createPasswordSetupToken } from "@/lib/auth/passwordSetup";
-import { sendRequestedPasswordSetupEmail } from "@/lib/mail";
+import { sendForgotPasswordRequest } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
     try {
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
         //form complete url using raw token created in the password setup function
         const link = `${baseUrl}/login/first-login?token=${encodeURIComponent(rawToken)}`
 
-        await sendRequestedPasswordSetupEmail({
+        await sendForgotPasswordRequest({
             email: user.email,
             firstName: user.first_name ?? "User",
             setupLink: link,
