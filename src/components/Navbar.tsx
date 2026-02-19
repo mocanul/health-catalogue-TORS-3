@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import LogoutButton from "@/components/logoutButton"
 
 type NavLink = {
@@ -15,10 +16,13 @@ type NavbarProps = {
 export default function Navbar({links = [], showLogout}: NavbarProps) {
   return (
     <nav className="flex items-center justify-between border-b bg-[#B80050]">
-      <img
-        alt="Sheffield Hallam: Knowledge Applied"
-        className="w-30 md:w-35 lg:w-40"
+      
+      <Image
         src="/SHU_logo_bnw.png"
+        width={300}
+        height={300}
+        alt="Sheffield Hallam University Logo"
+        className="w-30 md:w-35 lg:w-40"
       />
 
       <div className="flex items-end h-full pr-4 pb-1">
