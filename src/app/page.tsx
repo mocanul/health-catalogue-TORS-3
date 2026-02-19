@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
 
@@ -6,29 +6,10 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b bg-[#B80050]">
-        <img alt="Sheffield Hallam: Knowledge Applied" className="w-30 md:w-35 lg:w-40" src="/SHU_logo_bnw.png"/>
-
-        <div className="flex items-end h-full pr-4 md:pr-6 lg:pr-6 pb-1">
-          <Link 
-            href="https://www.shu.ac.uk/myhallam"
-            className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
-            My Hallam
-          </Link>
-
-          <Link
-            href="https://www.shu.ac.uk/myhallam/support-at-hallam/tors"
-            className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
-            About
-          </Link>
-
-          <Link
-            href="/login"
-            className="rounded-md px-2 md:px-6 lg:px-6 py-3 ml-10font-bold text-white bg-pink-950 hover:bg-pink-900 transition">
-            Login
-          </Link>
-        </div>
-      </nav>
+      <Navbar links={[
+        { href: "https://www.shu.ac.uk/myhallam", label: "My Hallam" },
+        { href: "https://www.shu.ac.uk/myhallam/support-at-hallam/tors", label: "About" },
+        { href: "/login", label: "Login", primary: true }]}/>
 
       <main className="flex-1 flex flex-col items-center justify-center bg-gray-50 px-4">
         <img alt="T.O.R.S" className="w-50 md:w-55 lg:w-60 py-6" src="/TORS_logo.png"/>
