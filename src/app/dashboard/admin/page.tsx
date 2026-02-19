@@ -1,27 +1,16 @@
 "use client"
 import Navbar from "@/components/Navbar"
-import { useRouter } from "next/navigation"
-
 
 export default function AdminDashboard() {
-
-    const router = useRouter();
-
-    function handleUsers() {
-        router.push("admin/users")
-        router.refresh()
-    }
-
     return (
-        <div>
-            <Navbar showLogout={true} links={[
-                {href: "/dashboard/admin", label: "Activity", primary: true},
-                {href: "/dashboard/admin/catalogue", label: "Order Catalogue"},
-                {href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue"},
-                {href: "/dashboard/admin/users", label: "Users"}
-            ]}/>
-
             <div className="flex h-full flex-col">
+                <Navbar showLogout={true} links={[
+                    {href: "/dashboard/admin", label: "Activity", primary: true},
+                    {href: "/dashboard/admin/catalogue", label: "Order Catalogue"},
+                    {href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue"},
+                    {href: "/dashboard/admin/users", label: "Users"}
+                ]}/>
+
                 <div className="flex border-2 h-full">
 
                     <div className="flex flex-row h-full border-2 w-full border-amber-400">
@@ -36,7 +25,6 @@ export default function AdminDashboard() {
                 <div className="h-full border-2 border-green-400">
 
                 </div>
-            </div>
         </div>
     )
 }

@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar"
 
 export default function StaffDashboard() {
     return (
-        <div>
+        <div className="flex min-h-screen flex-col">
             <Navbar showLogout={true} links={[
             ]}/>
 
