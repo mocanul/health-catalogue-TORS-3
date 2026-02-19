@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
+import ConfirmActionMessage from "./confirmActionMessage";
 
 //shape of user returned from API
 //should be aligned with the Prisma select()
@@ -38,6 +39,8 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
     //client states
     const [isEditMode, setIsEditMode] = useState(false); //toggle between view and edit mode
     const [saving, setSaving] = useState(false); //changes save button to saving state, preventing double saving
+    const [isDeleting, setIsDeleting] = useState(false); //changes delete button to deleting state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); //shows delete confirmation dialog
     const [error, setError] = useState<string | null>(null);
 
     //only render modal when Open == true and User exists
@@ -55,11 +58,6 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
     }, [open, user]);
 
     const emailLooksValid = useMemo(() => {
-        //simple client validation (server must still validate)
-        /*
-        *TODO: Add zod validation
-        *
-        */
         return /^\S+@\S+\.\S+$/.test(email.trim());
     }, [email]);
 
@@ -104,6 +102,47 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
             setError("Something went wrong.");
         } finally {
             setSaving(false);
+        }
+    }
+
+    //function for deleting user
+    function handleDelete() {
+        if (!user) return;
+        setShowDeleteConfirm(true);
+    }
+
+    //function for confirming delete after user acknowledges warning
+    async function confirmDelete() {
+        if (!user) return;
+
+        setIsDeleting(true);
+        setError(null);
+
+        //calling user/[id] api with DELETE method
+        try {
+            const res = await fetch(`/api/admin/users/${user.id}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            //parse JSON
+            const payload = await res.json().catch(() => null);
+
+            if (!res.ok) {
+                const msg =
+                    payload?.error ||
+                    payload?.message ||
+                    "Failed to delete user. Check server logs.";
+                throw new Error(msg);
+            }
+
+            onSaved?.(user);
+            onClose();
+        } catch {
+            setError("Something went wrong.");
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
         }
     }
 
@@ -228,33 +267,57 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
                         </div>
                     )}
 
-                    <div className="mt-5 flex items-center justify-end gap-2">
-                        {isEditMode && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditMode(false)}
-                                    className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                                    disabled={saving}
-                                >
-                                    Cancel
-                                </button>
+                    <div className="mt-5 flex items-center justify-between gap-2">
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                            disabled={isDeleting || saving}
+                        >
+                            {isDeleting ? "Deleting..." : "Delete user"}
+                        </button>
 
-                                <button
-                                    type="submit"
-                                    className="rounded-md bg-[#B80050] px-4 py-2 text-sm font-medium text-white hover:bg-pink-900 disabled:opacity-60"
-                                    disabled={saving || !emailLooksValid}
-                                >
-                                    {saving ? "Saving..." : "Save changes"}
-                                </button>
-                            </>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {isEditMode && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditMode(false)}
+                                        className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                                        disabled={saving}
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="rounded-md bg-[#B80050] px-4 py-2 text-sm font-medium text-white hover:bg-pink-900 disabled:opacity-60"
+                                        disabled={saving || !emailLooksValid}
+                                    >
+                                        {saving ? "Saving..." : "Save changes"}
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     <p className="mt-3 text-xs text-gray-500">
                         Editing user ID: <span className="font-medium">{user.id}</span>
                     </p>
                 </form>
+
+                <ConfirmActionMessage
+                    open={showDeleteConfirm}
+                    title="Delete User"
+                    message={`Are you sure you want to delete ${user.first_name} ${user.last_name}? This action cannot be undone.`}
+                    actionType="delete"
+                    confirmLabel="Delete"
+                    cancelLabel="Cancel"
+                    isDangerous={true}
+                    isLoading={isDeleting}
+                    onConfirm={confirmDelete}
+                    onCancel={() => setShowDeleteConfirm(false)}
+                />
             </div>
         </div>
     );

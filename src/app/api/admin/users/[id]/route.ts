@@ -101,3 +101,58 @@ export async function PATCH(
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }
+
+export async function DELETE(
+    req: Request,
+    context: { params: Promise<{ id: string }> }
+) {
+    try {
+        //get session cookie and validate session
+        const cookieStore = await cookies();
+        const token = cookieStore.get("session")?.value;
+
+        if (!token) {
+            return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+        }
+
+        const sessionUser = await validateSession(token);
+        if (!sessionUser) {
+            const res = NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+            res.cookies.set("session", "", { path: "/", maxAge: 0 });
+            return res;
+        }
+
+        //only allow admin to delete users
+        if (sessionUser.role !== "ADMIN") {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        //get user id
+        const { id } = await context.params;
+        const userId = Number(id);
+        if (!Number.isFinite(userId)) {
+            return NextResponse.json({ error: "Invalid user id" }, { status: 400 });
+        }
+
+        //prevent admin from deleting themselves
+        if (sessionUser.id === userId) {
+            return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+        }
+
+        //delete user from database
+        await prisma.user.delete({
+            where: { id: userId },
+        });
+
+        return NextResponse.json({ success: true }, { status: 200 });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+        //user not found error
+        if (err?.code === "P2025") {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        console.error("DELETE /api/admin/users/[id] failed:", err);
+        return NextResponse.json({ error: "Server error" }, { status: 500 });
+    }
+}
