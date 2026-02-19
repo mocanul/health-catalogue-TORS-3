@@ -85,7 +85,7 @@ export default function AdminUsersPage() {
                         Users
                     </button>
 
-                    <LogoutButton />
+                    <LogoutButton/>
                 </div>
             </nav>
 

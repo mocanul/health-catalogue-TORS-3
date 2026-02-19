@@ -10,6 +10,14 @@ export default function StudentDashboard() {
                     STUDENT DASHBOARD
                 </h1>
 
+                <Link href="/dashboard/student/firstLogin">
+                    first Login
+                </Link>
+
+                <Link href="/dashboard/student/catalogue">
+                    Catalogue
+                </Link>
+
                 <p className="text-gray-600">
                     Authentication successful.
                 </p>
