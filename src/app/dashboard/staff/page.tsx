@@ -1,18 +1,22 @@
 "use client"
-import LogoutButton from "@/components/logoutButton"
+import Navbar from "@/components/Navbar"
 
 export default function StaffDashboard() {
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="p-10 bg-white rounded-xl shadow-lg text-center">
-                <LogoutButton />
-                <h1 className="text-3xl font-bold mb-4">
-                    STAFF DASHBOARD
-                </h1>
-                <p className="text-gray-600">
-                    Authentication successful.
-                </p>
-            </div>
-        </main>
+        <div>
+            <Navbar showLogout={true} links={[
+            ]}/>
+
+            <main className="min-h-screen flex items-center justify-center bg-gray-100">
+                <div className="p-10 bg-white rounded-xl shadow-lg text-center">
+                    <h1 className="text-3xl font-bold mb-4">
+                        STAFF DASHBOARD
+                    </h1>
+                    <p className="text-gray-600">
+                        Authentication successful.
+                    </p>
+                </div>
+            </main>
+        </div>
     )
 }

@@ -1,7 +1,5 @@
 "use client"
-import LogoutButton from "@/components/logoutButton"
-import Image from "next/image"
-import Link from "next/link"
+import Navbar from "@/components/Navbar"
 import { useRouter } from "next/navigation"
 
 
@@ -15,53 +13,29 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="flex h-full flex-col">
-            <nav className="flex items-center justify-between border-b bg-[#B80050]">
-                <Image
-                    src="/SHU_logo_bnw.png"
-                    alt="SHU logo"
-                    width={330}
-                    height={330}
-                    className="w-60 h-auto" />
+        <div>
+            <Navbar showLogout={true} links={[
+                {href: "/dashboard/admin", label: "Activity", primary: true},
+                {href: "/dashboard/admin/catalogue", label: "Order Catalogue"},
+                {href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue"},
+                {href: "/dashboard/admin/users", label: "Users"}
+            ]}/>
 
-                <div className="flex items-end h-full gap-5 pr-6 pb-1">
-                    <button className="rounded-md px-6 py-3 text-xl font-bold text-white bg-pink-900 transition">
-                        Activity
-                    </button>
+            <div className="flex h-full flex-col">
+                <div className="flex border-2 h-full">
 
-                    <Link
-                        href="/dashboard/admin/catalogue"
-                        className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
-                        Ordering Catalogue
-                    </Link>
+                    <div className="flex flex-row h-full border-2 w-full border-amber-400">
+                        <div className="w-full border-2 border-red-500">
 
-                    <Link
-                        href="/dashboard/admin/editCatalogue"
-                        className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
-                        Editing Catalogue
-                    </Link>
+                        </div>
+                        <div className="w-full border-2 border-blue-400">
 
-                    <button className="rounded-md px-6 py-3 text-xl font-bold text-white hover:bg-pink-900 transition"
-                        onClick={handleUsers}>
-                        Users
-                    </button>
-
-                    <LogoutButton />
-                </div>
-            </nav>
-            <div className="flex border-2 h-full">
-
-                <div className="flex flex-row h-full border-2 w-full border-amber-400">
-                    <div className="w-full border-2 border-red-500">
-
-                    </div>
-                    <div className="w-full border-2 border-blue-400">
-
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className="h-full border-2 border-green-400">
+                <div className="h-full border-2 border-green-400">
 
+                </div>
             </div>
         </div>
     )

@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Link from "next/link"
+import LogoutButton from "@/components/logoutButton"
 
 type NavLink = {
   href: string;
@@ -8,9 +9,10 @@ type NavLink = {
 
 type NavbarProps = {
   links?: NavLink[];
+  showLogout?: boolean;
 };
 
-export default function Navbar({ links = [] }: NavbarProps) {
+export default function Navbar({links = [], showLogout}: NavbarProps) {
   return (
     <nav className="flex items-center justify-between border-b bg-[#B80050]">
       <img
@@ -32,7 +34,10 @@ export default function Navbar({ links = [] }: NavbarProps) {
           >
             {link.label}
           </Link>
+
+        
         ))}
+        {showLogout && <LogoutButton/>}
       </div>
     </nav>
   );
