@@ -11,7 +11,7 @@ const Schema = z.object({
     //password criteria
     password: z
         .string()
-        .min(12, "Password must be at least 12 characters")
+        .min(8, "Password must be at least 8 characters")
         .max(50, "Password must not exceed 50 characters")
         .refine(
             (password) => /[A-Z]/.test(password),
@@ -36,7 +36,11 @@ export async function POST(req: NextRequest) {
         const body = await req.json()
         const parsed = Schema.safeParse(body)
         if (!parsed.success) {
-            return NextResponse.json({ error: "Invalid input" }, { status: 400 })
+            const messages = parsed.error.issues.map((i) => i.message)
+            return NextResponse.json(
+                { error: "Invalid input", issues: parsed.error.issues, messages },
+                { status: 400 }
+            )
         }
 
         //hash raw password setup token

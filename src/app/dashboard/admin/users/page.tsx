@@ -24,6 +24,9 @@ export default function AdminUsersPage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedRole, setSelectedRole] = useState("all");
+
     useEffect(() => {
         async function fetchUsers() {
             try {
@@ -44,6 +47,17 @@ export default function AdminUsersPage() {
 
         fetchUsers();
     }, []);//empty dependency array = run once
+
+    const filteredUsers = users.filter((user) => {
+        const matchesSearch = searchTerm === "" ||
+            (user.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.email?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const matchesRole = selectedRole === "all" || (user.role?.toLowerCase() === selectedRole.toLowerCase());
+
+        return matchesSearch && matchesRole;
+    });
 
     async function viewActivity() {
 
@@ -109,15 +123,20 @@ export default function AdminUsersPage() {
                                 <input
                                     type="text"
                                     placeholder="Search by name or email..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
                                 />
                             </div>
 
-                            <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white cursor-pointer">
+                            <select
+                                value={selectedRole}
+                                onChange={(e) => setSelectedRole(e.target.value)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white cursor-pointer">
                                 <option value="all">All Roles</option>
-                                <option value="donor">Students</option>
-                                <option value="charity">Staff</option>
-                                <option value="admin">Technicians</option>
+                                <option value="student">Students</option>
+                                <option value="staff">Staff</option>
+                                <option value="technician">Technicians</option>
                             </select>
                         </div>
                     </div>
@@ -137,7 +156,7 @@ export default function AdminUsersPage() {
                                 </thead>
 
                                 <tbody>
-                                    {users.map((user) => (
+                                    {filteredUsers.map((user) => (
                                         <tr key={user.id} className="border-b">
                                             <td className="p-3 text-center ">{user.id}</td>
                                             <td className="p-3 text-center ">{user.first_name} {user.last_name}</td>
@@ -152,7 +171,7 @@ export default function AdminUsersPage() {
                                         </tr>
                                     ))}
 
-                                    {users.length === 0 && (
+                                    {filteredUsers.length === 0 && (
                                         <tr>
                                             <td className="p-3 text-center" colSpan={6}>
                                                 No users found
@@ -169,6 +188,9 @@ export default function AdminUsersPage() {
             <AddUser
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onSaved={(newUser) => {
+                    setUsers((prev) => [...prev, newUser]);
+                }}
             />
 
             <EditUserModal

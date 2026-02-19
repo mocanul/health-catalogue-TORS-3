@@ -13,28 +13,6 @@ const userSchema = z.object({
     lastName: z.string().trim().min(1).max(255),
     email: z.string().trim().email().max(255),
     role: z.enum(["TECHNICIAN", "STAFF", "STUDENT"]),
-
-    //password criteria
-    password: z
-        .string()
-        .min(12, "Password must be at least 12 characters")
-        .max(50, "Password must not exceed 50 characters")
-        .refine(
-            (password) => /[A-Z]/.test(password),
-            "Password must contain at least one uppercase letter"
-        )
-        .refine(
-            (password) => /[a-z]/.test(password),
-            "Password must contain at least one lowercase letter"
-        )
-        .refine(
-            (password) => /[0-9]/.test(password),
-            "Password must contain at least one number"
-        )
-        .refine(
-            (password) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
-            "Password must contain at least one special character"
-        ),
 })
 
 function generateTemporaryPassword(length = 16): string {
@@ -92,8 +70,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(user, { status: 201 })
     } catch (err) {
         if (err instanceof z.ZodError) {
+            const messages = err.issues.map((i) => i.message)
             return NextResponse.json(
-                { error: "Invalid input", issues: err.issues },
+                { error: "Invalid input", issues: err.issues, messages },
                 { status: 400 }
             )
         }
