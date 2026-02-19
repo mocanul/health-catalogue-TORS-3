@@ -19,17 +19,18 @@ type Props = {
     onClose: () => void;
     user: User | null; //stores the currently selected user from users table
     onSaved?: (updated: User) => void; //update UI without refresh
+    onDeleted?: (userId: string) => void; //removes user from UI when deleted
 };
 
 //role options for accounts
 //excluding admin
 const roleOptions = [
     { value: "TECHNICIAN", label: "Technician" },
-    { value: "STAFF", label: "Lecturer" },
+    { value: "STAFF", label: "Staff" },
     { value: "STUDENT", label: "Student" },
 ];
 
-export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
+export default function EditUserModal({ open, onClose, user, onSaved, onDeleted }: Props) {
     //user inputs
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -137,6 +138,7 @@ export default function EditUserModal({ open, onClose, user, onSaved }: Props) {
             }
 
             onSaved?.(user);
+            onDeleted?.(user.id);
             onClose();
         } catch {
             setError("Something went wrong.");

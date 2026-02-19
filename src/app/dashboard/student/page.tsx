@@ -1,4 +1,5 @@
 "use client"
+import Link from "next/link"
 import LogoutButton from "@/components/logoutButton"
 
 export default function StudentDashboard() {

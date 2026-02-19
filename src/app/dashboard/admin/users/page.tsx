@@ -1,5 +1,4 @@
 "use client"
-import Image from "next/image"
 import LogoutButton from "@/components/logoutButton"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -73,7 +72,7 @@ export default function AdminUsersPage() {
     return (
         <div className="flex h-full flex-col">
             <nav className="flex items-center justify-between border-b bg-[#B80050]">
-                <img alt="Sheffield Hallam: Knowledge Applied" className="w-30 md:w-35 lg:w-40" src="/SHU_logo_bnw.png"/>
+                <img alt="Sheffield Hallam: Knowledge Applied" className="w-30 md:w-35 lg:w-40" src="/SHU_logo_bnw.png" />
 
                 <div className="flex items-end h-full gap-5 pr-6 pb-1">
                     <button className="rounded-md px-6 py-3 text-xl font-bold text-white hover:bg-pink-900 transition"
@@ -85,7 +84,7 @@ export default function AdminUsersPage() {
                         Users
                     </button>
 
-                    <LogoutButton/>
+                    <LogoutButton />
                 </div>
             </nav>
 
@@ -194,6 +193,10 @@ export default function AdminUsersPage() {
                 onSaved={(updated) => {
                     //update table without refetch
                     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+                }}
+                onDeleted={(userId) => {
+                    //remove deleted user from table
+                    setUsers((prev) => prev.filter((u) => u.id !== userId));
                 }}
             />
         </div>
