@@ -5,20 +5,27 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react";
 import AddUser from "@/components/modals/newUserModal"
+import EditUserModal from "@/components/modals/editUserModal"
 
 type User = {
     id: string;
-    firstName: string,
-    lastName: string,
+    first_name: string,
+    last_name: string,
     email: string;
     role: string;
 }
+
 
 export default function AdminUsersPage() {
     const router = useRouter()
     const [users, setUsers] = useState<User[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedRole, setSelectedRole] = useState("all");
 
     useEffect(() => {
         async function fetchUsers() {
@@ -32,7 +39,7 @@ export default function AdminUsersPage() {
                 const data: User[] = await res.json();
                 setUsers(data);
 
-                console.log(data); // optional
+                console.log(data);
             } catch (error) {
                 console.error(error);
             }
@@ -41,10 +48,26 @@ export default function AdminUsersPage() {
         fetchUsers();
     }, []);//empty dependency array = run once
 
+    const filteredUsers = users.filter((user) => {
+        const matchesSearch = searchTerm === "" ||
+            (user.first_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (user.email?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const matchesRole = selectedRole === "all" || (user.role?.toLowerCase() === selectedRole.toLowerCase());
+
+        return matchesSearch && matchesRole;
+    });
+
     async function viewActivity() {
 
         router.push("/dashboard/admin")
         router.refresh()
+    }
+
+    function openEdit(user: User) {
+        setSelectedUser(user);
+        setIsEditOpen(true);
     }
 
     return (
@@ -94,20 +117,25 @@ export default function AdminUsersPage() {
                                 <input
                                     type="text"
                                     placeholder="Search by name or email..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
                                 />
                             </div>
 
-                            <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white cursor-pointer">
+                            <select
+                                value={selectedRole}
+                                onChange={(e) => setSelectedRole(e.target.value)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white cursor-pointer">
                                 <option value="all">All Roles</option>
-                                <option value="donor">Students</option>
-                                <option value="charity">Staff</option>
-                                <option value="admin">Technicians</option>
+                                <option value="student">Students</option>
+                                <option value="staff">Staff</option>
+                                <option value="technician">Technicians</option>
                             </select>
                         </div>
                     </div>
 
-                    {/* Table wrapper controls width + scroll */}
+                    {/* table wrapper controls width + scroll */}
                     <div className="w-full overflow-x-auto">
                         <div className="max-h-130 overflow-y-auto">
                             <table className="w-full border">
@@ -122,21 +150,22 @@ export default function AdminUsersPage() {
                                 </thead>
 
                                 <tbody>
-                                    {users.map((user) => (
+                                    {filteredUsers.map((user) => (
                                         <tr key={user.id} className="border-b">
                                             <td className="p-3 text-center ">{user.id}</td>
-                                            <td className="p-3 text-center ">{user.firstName} {user.lastName}</td>
+                                            <td className="p-3 text-center ">{user.first_name} {user.last_name}</td>
                                             <td className="p-3 text-center border-gray-500">{user.email}</td>
                                             <td className="p-3 text-center border-gray-500">{user.role}</td>
                                             <td className="p-3 text-center border-gray-500">
-                                                <button className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm">
-                                                    Edit
+                                                <button className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm"
+                                                    onClick={() => openEdit(user)}>
+                                                    View
                                                 </button>
                                             </td>
                                         </tr>
                                     ))}
 
-                                    {users.length === 0 && (
+                                    {filteredUsers.length === 0 && (
                                         <tr>
                                             <td className="p-3 text-center" colSpan={6}>
                                                 No users found
@@ -153,6 +182,19 @@ export default function AdminUsersPage() {
             <AddUser
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onSaved={(newUser) => {
+                    setUsers((prev) => [...prev, newUser]);
+                }}
+            />
+
+            <EditUserModal
+                open={isEditOpen}
+                user={selectedUser}
+                onClose={() => setIsEditOpen(false)}
+                onSaved={(updated) => {
+                    //update table without refetch
+                    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+                }}
             />
         </div>
     )

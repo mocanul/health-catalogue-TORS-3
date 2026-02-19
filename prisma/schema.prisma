@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  first_name   String?  @db.VarChar(255)
-  last_name    String?  @db.VarChar(255)
-  email        String   @unique @db.VarChar(255)
-  role         UserRole
-  is_active    Boolean  @default(true)
-  created_at   DateTime @default(now())
-  passwordHash String
-
-  auditLogs AuditLog[]
-  bookings  Booking[]
-  sessions  Session[]
+  id                 Int                  @id @default(autoincrement())
+  first_name         String?              @db.VarChar(255)
+  last_name          String?              @db.VarChar(255)
+  email              String               @unique @db.VarChar(255)
+  role               UserRole
+  is_active          Boolean              @default(true)
+  created_at         DateTime             @default(now())
+  passwordHash       String
+  auditLogs          AuditLog[]
+  bookings           Booking[]
+  PasswordSetupToken PasswordSetupToken[]
+  sessions           Session[]
 }
 
 model AuditLog {
@@ -31,8 +31,7 @@ model AuditLog {
   old_value    Json?
   new_value    Json?
   created_at   DateTime @default(now())
-
-  user User @relation(fields: [performed_by], references: [id])
+  user         User     @relation(fields: [performed_by], references: [id])
 
   @@index([entity_type, entity_id])
   @@index([performed_by])
@@ -49,7 +48,6 @@ model Booking {
   status       BookingStatus @default(DRAFT)
   created_at   DateTime      @default(now())
   updated_at   DateTime
-
   user         User          @relation(fields: [created_by], references: [id])
   room         Room          @relation(fields: [room_id], references: [id])
   bookingItems BookingItem[]
@@ -60,43 +58,40 @@ model Booking {
 }
 
 model BookingItem {
-  id                 Int @id @default(autoincrement())
+  id                 Int       @id @default(autoincrement())
   booking_id         Int
   equipment_id       Int
   quantity_requested Int
-  quantity_allocated Int @default(0)
-
-  booking   Booking   @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  equipment Equipment @relation(fields: [equipment_id], references: [id])
+  quantity_allocated Int       @default(0)
+  booking            Booking   @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  equipment          Equipment @relation(fields: [equipment_id], references: [id])
 
   @@unique([booking_id, equipment_id])
   @@index([equipment_id])
 }
 
 model Equipment {
-  id                 Int      @id @default(autoincrement())
-  name               String   @db.VarChar(255)
+  id                 Int           @id @default(autoincrement())
+  name               String        @db.VarChar(255)
   description        String?
-  category           String?  @db.VarChar(255)
+  category           String?       @db.VarChar(255)
   quantity_available Int
   fixed_room_id      Int?
-  is_active          Boolean  @default(true)
-  created_at         DateTime @default(now())
-
-  bookingItems BookingItem[]
-  room         Room?         @relation(fields: [fixed_room_id], references: [id])
+  is_active          Boolean       @default(true)
+  created_at         DateTime      @default(now())
+  bookingItems       BookingItem[]
+  room               Room?         @relation(fields: [fixed_room_id], references: [id])
 
   @@index([fixed_room_id])
 }
 
 model Room {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(255)
-  building   String?  @db.VarChar(255)
-  created_at DateTime @default(now())
-
-  bookings  Booking[]
-  equipment Equipment[]
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(255)
+  building   String?     @db.VarChar(255)
+  created_at DateTime    @default(now())
+  bookings   Booking[]
+  equipment  Equipment[]
 }
 
 model LoginAttempt {
@@ -117,8 +112,20 @@ model Session {
   expires_at DateTime
   revoked    Boolean  @default(false)
   created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  @@index([expires_at])
+  @@index([user_id])
+}
+
+model PasswordSetupToken {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([expires_at])
   @@index([user_id])

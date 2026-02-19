@@ -9,13 +9,9 @@ export default function AdminDashboard() {
     const router = useRouter();
 
     function handleUsers() {
-
         router.push("admin/users")
         router.refresh()
     }
-
-
-
 
     return (
         <div className="flex h-full flex-col">

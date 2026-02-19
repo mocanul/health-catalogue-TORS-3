@@ -3,11 +3,6 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react"
 
-type Issue = {
-    message: string
-    path?: (string | number)[]
-}
-
 export default function FirstLogin() {
 
     //gets token therefore getting the router to the first-login page
@@ -27,7 +22,7 @@ export default function FirstLogin() {
 
     //UI states
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState<string | string[] | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [done, setDone] = useState(false);
 
     //submit handler
@@ -64,33 +59,17 @@ export default function FirstLogin() {
 
             const payload = await res.json().catch(() => null);
 
-            //show error message(s) to user
+            //show error message to user
             if (!res.ok) {
-                // Zod messages returned as `messages` (array) or `issues` (array of objects)
-                if (payload?.messages) {
-                    setError(payload.messages);
-                    setSubmitting(false);
-                    return;
-                }
-
-                if (payload?.issues) {
-                    const msgs = (payload.issues as Issue[]).map((i) => i.message);
-                    setError(msgs);
-                    setSubmitting(false);
-                    return;
-                }
-
                 const msg = payload?.error || payload?.message || "Failed to set password. The link may be expired.";
                 throw new Error(msg);
             }
 
             setDone(true);
-        } catch (err: unknown) {
-            if (err instanceof Error) {
-                setError(err.message)
-            } else {
-                setError("Something went wrong.")
-            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            setError(err?.message || "Something went wrong.");
         } finally {
             setSubmitting(false);
         }
@@ -181,15 +160,7 @@ export default function FirstLogin() {
 
                             {error && (
                                 <div className="w-full rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                                    {Array.isArray(error) ? (
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            {error.map((m, i) => (
-                                                <li key={i}>{m}</li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p>{error}</p>
-                                    )}
+                                    {error}
                                 </div>
                             )}
 

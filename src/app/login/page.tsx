@@ -121,7 +121,7 @@ export default function Login() {
 
                             <div className="relative">
                                 <input
-                                id="password"
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -148,6 +148,10 @@ export default function Login() {
                             {loading ? "Logging in..." : "Log In"}
                         </button>
                     </form>
+                    <div className="flex flex-col pt-3">
+                        <a href="/login/enter-email" className="underline text-blue-600 hover:text-purple-700">Request password setup</a>
+                        <a href="/login/forgot-pass" className="underline text-blue-600 hover:text-purple-700">Forgot  Password</a>
+                    </div>
                 </div>
             </div>
         </main>
