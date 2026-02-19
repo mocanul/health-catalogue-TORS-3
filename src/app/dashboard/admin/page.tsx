@@ -1,6 +1,7 @@
 "use client"
 import LogoutButton from "@/components/logoutButton"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 
@@ -25,13 +26,24 @@ export default function AdminDashboard() {
                     alt="SHU logo"
                     width={330}
                     height={330}
-                    className="w-60 h-auto"
-                />
+                    className="w-60 h-auto"/>
 
                 <div className="flex items-end h-full gap-5 pr-6 pb-1">
                     <button className="rounded-md px-6 py-3 text-xl font-bold text-white bg-pink-900 transition">
                         Activity
                     </button>
+
+                    <Link
+                        href="/dashboard/admin/catalogue"
+                        className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
+                        Ordering Catalogue
+                    </Link>
+
+                    <Link
+                        href="/dashboard/admin/editCatalogue"
+                        className="rounded-md px-2 md:px-6 lg:px-6 py-3 font-bold text-white hover:bg-pink-900 transition">
+                        Editing Catalogue
+                    </Link>
 
                     <button className="rounded-md px-6 py-3 text-xl font-bold text-white hover:bg-pink-900 transition"
                         onClick={handleUsers}>

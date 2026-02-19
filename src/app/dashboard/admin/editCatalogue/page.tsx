@@ -1,4 +1,4 @@
-import Catalogue from "@/components/catalogueBase"
+import Catalogue from "@/components/catalogueEditor"
 import LogoutButton from "@/components/logoutButton"
 
 export default function Home() {
