@@ -6,8 +6,8 @@ export default function TechnicianDashboard() {
         <div className="flex min-h-screen flex-col">
             <Navbar showLogout={true} links={[
                 {href: "/dashboard/technician", label: "Home", primary: true},
-                {href: "/dashboard/student/catalogue", label: "Order Catalogue"},
-                {href: "/dashboard/student/editCatalogue", label: "Edit Catalogue"}
+                {href: "/dashboard/technician/catalogue", label: "Order Catalogue"},
+                {href: "/dashboard/technician/editCatalogue", label: "Edit Catalogue"}
             ]}/>
 
             <main className="min-h-screen flex items-center justify-center bg-gray-100">

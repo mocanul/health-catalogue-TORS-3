@@ -33,7 +33,7 @@ export default async function Catalogue() {
 
                     {/* Table wrapper controls width + scroll */}
                     <div className="w-full overflow-x-auto">
-                        <div className="max-h-130 overflow-y-auto">
+                        <div className="max-h-120 overflow-y-auto">
                             <div className="w-full max-w-6xl rounded-lg shadow-md flex flex-col overflow-hidden">
                                 <table className="w-full border">
                                     <thead className="sticky top-0 bg-pink-50">

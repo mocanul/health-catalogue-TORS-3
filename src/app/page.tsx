@@ -28,7 +28,7 @@ export default function Home() {
           </h1>
 
           <p className="text-sm md:text-base lg:text-lg text-[#B80050] font-medium">
-            The T.O.R.S booking page provides Sheffield Hallam healthcare students and staff with a simple way to book clinical teaching spaces, simulation rooms, and specialist equipment.
+            The T.O.R.S booking page provides Sheffield Hallam healthcare and staff with a simple way to book clinical teaching spaces, simulation rooms, and specialist equipment.
           </p><br></br>
           <p className="text-sm md:text-base lg:text-lg text-[#B80050] font-medium">
             Log in to check availability of rooms and equipment, manage bookings, and prepare for practical sessions.
