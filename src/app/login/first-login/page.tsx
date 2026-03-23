@@ -1,14 +1,23 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react"
+import { Suspense } from "react"
 
 type Issue = {
     message: string
     path?: (string | number)[]
 }
 
-export default function FirstLogin() {
+export default function FirstLogin(){
+    <Suspense fallback={<div>Loading...</div>}>
+        <FirstLoginContent/>
+    </Suspense>
+}
+
+function FirstLoginContent() {
 
     //gets token therefore getting the router to the first-login page
     const searchParams = useSearchParams();

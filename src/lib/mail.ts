@@ -8,18 +8,7 @@ const EMAIL_SIGNATURE = `
 </p>
 `
 
-//host, port and auth are taken from .env file
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: false, //true only if using port 465
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-})
-
-//check if .env variables exist, preventing run time errors
+//check if .env variables exist
 function requiredEnv(name: string): string {
     const value = process.env[name]
     if (!value) {
@@ -28,12 +17,17 @@ function requiredEnv(name: string): string {
     return value
 }
 
-//validate email configuration
-requiredEnv("SMTP_HOST")
-requiredEnv("SMTP_PORT")
-requiredEnv("SMTP_USER")
-requiredEnv("SMTP_PASS")
-requiredEnv("SMTP_FROM")
+function getTransporter() {
+    return nodemailer.createTransport({
+        host: requiredEnv("SMTP_HOST"),
+        port: Number(requiredEnv("SMTP_PORT")),
+        secure: false,
+        auth: {
+            user: requiredEnv("SMTP_USER"),
+            pass: requiredEnv("SMTP_PASS"),
+        },
+    })
+}
 
 //function for sending email
 //we can have multiple email functions for different purposes
@@ -44,6 +38,8 @@ export async function sendAccountCreatedEmail(params: {
     expires_at: Date
 }) {
     const { email, firstName, setupLink } = params
+
+    const transporter = getTransporter();
 
     await transporter.sendMail({
         from: process.env.SMTP_FROM,
@@ -67,6 +63,7 @@ export async function sendRequestedPasswordSetupEmail(params: {
 }) {
     const { email, firstName, setupLink } = params
 
+    const transporter = getTransporter();
     await transporter.sendMail({
         from: process.env.SMTP_FROM,
         to: email,
@@ -90,6 +87,7 @@ export async function sendForgotPasswordRequest(params: {
     setupLink: string
 }) {
     const { email, firstName, setupLink } = params
+    const transporter = getTransporter();
     await transporter.sendMail({
         from: process.env.SMTP_FROM,
         to: email,
@@ -105,6 +103,3 @@ export async function sendForgotPasswordRequest(params: {
     `,
     })
 }
-
-
-
