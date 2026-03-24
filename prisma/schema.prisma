@@ -20,6 +20,7 @@ model User {
   bookings           Booking[]
   PasswordSetupToken PasswordSetupToken[]
   sessions           Session[]
+  favourites         Favourite[]
 }
 
 model AuditLog {
@@ -81,8 +82,19 @@ model Equipment {
   created_at         DateTime      @default(now())
   bookingItems       BookingItem[]
   room               Room?         @relation(fields: [fixed_room_id], references: [id])
+  favourites         Favourite[]
 
   @@index([fixed_room_id])
+}
+
+model Favourite {
+  user_id      Int
+  equipment_id Int
+
+  user      User      @relation(fields: [user_id], references: [id])
+  equipment Equipment @relation(fields: [equipment_id], references: [id])
+
+  @@id([user_id, equipment_id])
 }
 
 model Room {
