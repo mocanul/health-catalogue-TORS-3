@@ -50,6 +50,18 @@ export default function Catalogue() {
             .finally(() => setLoading(false));
     }, []);
 
+    useEffect(() => {
+        fetch("/api/equipment/favourites")
+            .then((res) => {
+                if (!res.ok) return;
+                return res.json();
+            })
+            .then((ids: number[]) => {
+                if (ids) setFavourites(new Set(ids));
+            })
+            .catch(() => { });
+    }, []);
+
     const filtered = equipment.filter((item) => {
         if (activeTab === "Favourites") return favourites.has(item.id);
         const matchesTab = TAB_CATEGORIES[activeTab]?.includes(item.category ?? "");
@@ -57,12 +69,36 @@ export default function Catalogue() {
         return matchesTab && matchesSearch;
     });
 
-    const toggleFavourite = (id: number) => {
+    const toggleFavourite = async (id: number) => {
         setFavourites((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) { next.delete(id); } else { next.add(id); }
             return next;
         });
+
+        try {
+            const res = await fetch("/api/equipment/favourites", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ equipment_id: id }),
+            });
+
+            if (!res.ok) throw new Error();
+
+            const { favourited } = await res.json();
+
+            setFavourites((prev) => {
+                const next = new Set(prev);
+                if (favourited) { next.add(id); } else { next.delete(id); }
+                return next;
+            });
+        } catch {
+            setFavourites((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) { next.delete(id); } else { next.add(id); }
+                return next;
+            });
+        }
     };
 
     return (
@@ -86,11 +122,7 @@ export default function Catalogue() {
                         ))}
                     </div>
 
-                    {/* Right controls TODO: Filtering functions */}
                     <div className="flex items-center gap-2 ml-2 shrink-0">
-                        <button className="px-2.5 py-1 border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 cursor-pointer">
-                            Filter by
-                        </button>
 
                         {/* Search box */}
                         <div className="flex items-center border border-gray-300 rounded overflow-hidden">
