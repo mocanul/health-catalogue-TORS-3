@@ -2,8 +2,15 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react"
+import { Suspense } from "react"
 
-export default function FirstLogin() {
+export default function FirstLogin(){
+    <Suspense fallback={<div>Loading...</div>}>
+        <PassResetContent/>
+    </Suspense>
+}
+
+function PassResetContent() {
 
     //gets token therefore getting the router to the first-login page
     const searchParams = useSearchParams();

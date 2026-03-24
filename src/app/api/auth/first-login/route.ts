@@ -5,7 +5,7 @@ import { hashToken } from "@/lib/auth/passwordSetup"
 import { hashPassword } from "@/lib/auth/hash"
 
 //validation schema
-const Schema = z.object({
+export const PasswordSchema = z.object({
     token: z.string(),
 
     //password criteria
@@ -34,7 +34,7 @@ const Schema = z.object({
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json()
-        const parsed = Schema.safeParse(body)
+        const parsed = PasswordSchema.safeParse(body)
         if (!parsed.success) {
             const messages = parsed.error.issues.map((i) => i.message)
             return NextResponse.json(
