@@ -1,3 +1,5 @@
+//fetches all equipment to then be displayed on the catalogue
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -8,7 +10,7 @@ export async function GET() {
             orderBy: { name: "asc" },
         });
         return NextResponse.json(equipment);
-    } catch (error) {
+    } catch {
         return NextResponse.json(
             { error: "Failed to fetch equipment" },
             { status: 500 }

@@ -1,8 +1,15 @@
+// 1. Gets the logged in user ID
+// 2. Finds all favourite items for user in the Favourite model
+// 3. Toggle favourite for item by
+// a. Checking if item is already favourited, then it gets removed from database
+// b. If user_id + item_id don't exist in db, add it.
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/auth/session";
 
+//find user from session token in cookie
 async function getUser() {
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
