@@ -1,5 +1,5 @@
 import Navbar from "@/components/Navbar"
-import Bookings from "@/components/bookings"
+import Bookings from "@/components/bookingTable"
 
 export default function Home() {
 

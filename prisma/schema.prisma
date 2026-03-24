@@ -47,7 +47,7 @@ model Booking {
   end_time     DateTime      @db.Time(6)
   status       BookingStatus @default(DRAFT)
   created_at   DateTime      @default(now())
-  updated_at   DateTime
+  updated_at   DateTime      @updatedAt
   user         User          @relation(fields: [created_by], references: [id])
   room         Room          @relation(fields: [room_id], references: [id])
   bookingItems BookingItem[]
