@@ -5,6 +5,12 @@ export async function GET() {
     try {
         const rooms = await prisma.room.findMany({
             orderBy: { name: "asc" },
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                side_rooms: true,
+            },
         });
         return NextResponse.json(rooms);
     } catch {
