@@ -58,7 +58,7 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Favourites": [],
 };
 
-export default function Catalogue({ selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
+export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -245,7 +245,7 @@ export default function Catalogue({ selectedRoom, selectedSlot, isBooking, onAdd
                                         </span>
 
                                         {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
-                                        <div className="w-[170px] flex justify-end">
+                                        <div className="w-42.5 flex justify-end">
                                             {isBooking ? (
                                                 <button
                                                     className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
@@ -254,7 +254,7 @@ export default function Catalogue({ selectedRoom, selectedSlot, isBooking, onAdd
                                                     Add Item
                                                 </button>
                                             ) : (
-                                                <div className="w-[89px]" />
+                                                <div className="w-22.25" />
                                             )}
                                         </div>
                                     </div>

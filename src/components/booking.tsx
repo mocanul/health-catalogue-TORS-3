@@ -56,7 +56,7 @@ export default function Booking({
     const [timeTableOpen, setTimeTableOpen] = useState(false);
 
     const [rooms, setRooms] = useState<Room[]>([]);
-    const [bookings, setBookings] = useState<BookingData[]>([]);
+    const [bookings] = useState<BookingData[]>([]);
 
     const [hsFile, setHsFile] = useState<File | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
