@@ -1,218 +1,307 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-// Days students can switch between.
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-
-// One-hour timetable slots from 9am to 5pm.
-const timeSlots = [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-];
-
-// Room names taken from the Rooms sheet in the spreadsheet.
-const rooms = [
-    "F100",
-    "F200",
-    "F201",
-    "F203",
-    "F204",
-    "F208",
-    "F407",
-    "F310",
-    "F335",
-    "F338",
-    "F401",
-    "F434",
-    "F437",
-    "Collegiate Wing",
-    "F332",
-    "F336",
-    "F340",
-    "F341",
-    "F343",
-    "F313",
-    "F408",
-    "F514",
-    "F515",
-    "F516",
-];
-
-type Booking = {
+type TimetableRoom = {
     id: number;
-    day: string;
-    room: string;
-    startTime: string;
-    endTime: string;
-    title: string;
+    name: string;
 };
 
-// Mock bookings for the student view.
-// Later, replace this array with Prisma data and keep the rendering logic the same.
-const bookings: Booking[] = [
-    {
-        id: 1,
-        day: "Monday",
-        room: "F100",
-        startTime: "9:00 AM",
-        endTime: "11:00 AM",
-        title: "Room booked",
-    },
-    {
-        id: 2,
-        day: "Monday",
-        room: "F335",
-        startTime: "1:00 PM",
-        endTime: "3:00 PM",
-        title: "Room booked",
-    },
-    {
-        id: 3,
-        day: "Tuesday",
-        room: "F313",
-        startTime: "10:00 AM",
-        endTime: "12:00 PM",
-        title: "Room booked",
-    },
-];
+type TimetableBooking = {
+    id: number;
+    bookingDate: string;
+    startTime: string;
+    endTime: string;
+    roomName: string;
+    status: string;
+};
 
-function isRoomBooked(
-    bookingDay: string,
-    bookingRoom: string,
-    bookingStart: string,
-    bookingEnd: string,
-    selectedDay: string,
-    selectedRoom: string,
-    selectedTime: string,
+type TimetableSelection = {
+    bookingDate: string;
+    roomName: string;
+    startTime: string;
+    endTime: string;
+};
+
+type TimetableProps = {
+    rooms: TimetableRoom[];
+    bookings: TimetableBooking[];
+    initialDate: string;
+    numberOfDays?: number;
+    onSelectionChange?: (selection: TimetableSelection | null) => void;
+};
+
+const openingHour = 8;
+const closingHour = 22;
+
+// The grid is built from hourly start times, so 4pm is the final slot for a 4pm-5pm booking.
+const timeSlots = Array.from({ length: closingHour - openingHour }, (_, index) => {
+    const hour = openingHour + index;
+
+    return {
+        value: `${String(hour).padStart(2, "0")}:00`,
+        label: new Intl.DateTimeFormat("en-GB", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        }).format(new Date(2000, 0, 1, hour)),
+    };
+});
+
+function addDays(date: Date, amount: number) {
+    const nextDate = new Date(date);
+    nextDate.setDate(nextDate.getDate() + amount);
+    return nextDate;
+}
+
+function getDateKey(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+function formatDisplayDate(date: Date) {
+    return new Intl.DateTimeFormat("en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    }).format(date);
+}
+
+function formatTimeLabel(time: string) {
+    const [hours, minutes] = time.split(":").map(Number);
+
+    return new Intl.DateTimeFormat("en-GB", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    }).format(new Date(2000, 0, 1, hours, minutes));
+}
+
+function isBookedForSlot(
+    booking: TimetableBooking,
+    bookingDate: string,
+    roomName: string,
+    slotValue: string,
 ) {
-    if (bookingDay !== selectedDay || bookingRoom !== selectedRoom) {
-        return false;
-    }
-
-    const startIndex = timeSlots.indexOf(bookingStart);
-    const endIndex = timeSlots.indexOf(bookingEnd);
-    const slotIndex = timeSlots.indexOf(selectedTime);
-
     return (
-        startIndex !== -1 &&
-        endIndex !== -1 &&
-        slotIndex >= startIndex &&
-        slotIndex < endIndex
+        booking.bookingDate === bookingDate &&
+        booking.roomName === roomName &&
+        slotValue >= booking.startTime &&
+        slotValue < booking.endTime
     );
 }
 
-export default function Timetable() {
-    const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+export default function Timetable({
+    rooms,
+    bookings,
+    initialDate,
+    numberOfDays = 14,
+    onSelectionChange,
+}: TimetableProps) {
+    const dateOptions = useMemo(() => {
+        const startDate = new Date(`${initialDate}T00:00:00`);
 
-    const selectedDay = days[selectedDayIndex];
+        return Array.from({ length: numberOfDays }, (_, index) => {
+            const date = addDays(startDate, index);
 
-    const handlePreviousDay = () => {
-        if (selectedDayIndex > 0) {
-            setSelectedDayIndex(selectedDayIndex - 1);
+            return {
+                value: getDateKey(date),
+                label: formatDisplayDate(date),
+            };
+        });
+    }, [initialDate, numberOfDays]);
+
+    const [selectedDateIndex, setSelectedDateIndex] = useState(0);
+    const [selectedRange, setSelectedRange] = useState<{
+        roomName: string;
+        startSlotIndex: number;
+        endSlotIndex: number;
+    } | null>(null);
+
+    const selectedDate = dateOptions[selectedDateIndex];
+
+    const handlePreviousDate = () => {
+        if (selectedDateIndex > 0) {
+            setSelectedDateIndex(selectedDateIndex - 1);
+            setSelectedRange(null);
+            onSelectionChange?.(null);
         }
     };
 
-    const handleNextDay = () => {
-        if (selectedDayIndex < days.length - 1) {
-            setSelectedDayIndex(selectedDayIndex + 1);
+    const handleNextDate = () => {
+        if (selectedDateIndex < dateOptions.length - 1) {
+            setSelectedDateIndex(selectedDateIndex + 1);
+            setSelectedRange(null);
+            onSelectionChange?.(null);
         }
     };
+
+    function getActiveBooking(roomName: string, slotValue: string) {
+        return bookings.find((booking) =>
+            isBookedForSlot(booking, selectedDate.value, roomName, slotValue),
+        );
+    }
+
+    function slotHasBooking(roomName: string, slotIndex: number) {
+        return Boolean(getActiveBooking(roomName, timeSlots[slotIndex].value));
+    }
+
+    function updateSelection(roomName: string, startSlotIndex: number, endSlotIndex: number) {
+        const nextSelection = {
+            roomName,
+            startSlotIndex,
+            endSlotIndex,
+        };
+
+        setSelectedRange(nextSelection);
+
+        // This keeps the timetable reusable inside the separate booking flow later.
+        onSelectionChange?.({
+            bookingDate: selectedDate.value,
+            roomName,
+            startTime: timeSlots[startSlotIndex].value,
+            endTime:
+                endSlotIndex + 1 < timeSlots.length
+                    ? timeSlots[endSlotIndex + 1].value
+                    : `${String(closingHour).padStart(2, "0")}:00`,
+        });
+    }
+
+    function handleSlotClick(roomName: string, slotIndex: number) {
+        if (slotHasBooking(roomName, slotIndex)) {
+            return;
+        }
+
+        if (!selectedRange || selectedRange.roomName !== roomName) {
+            updateSelection(roomName, slotIndex, slotIndex);
+            return;
+        }
+
+        const nextStart = Math.min(selectedRange.startSlotIndex, slotIndex);
+        const nextEnd = Math.max(selectedRange.startSlotIndex, slotIndex);
+
+        for (let index = nextStart; index <= nextEnd; index += 1) {
+            if (slotHasBooking(roomName, index)) {
+                return;
+            }
+        }
+
+        updateSelection(roomName, nextStart, nextEnd);
+    }
+
+    function isSelected(roomName: string, slotIndex: number) {
+        return (
+            selectedRange?.roomName === roomName &&
+            slotIndex >= selectedRange.startSlotIndex &&
+            slotIndex <= selectedRange.endSlotIndex
+        );
+    }
 
     return (
         <section className="mx-auto max-w-[1600px] space-y-6 rounded-2xl bg-white p-6 shadow-lg">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Timetable</h1>
-                    <p className="text-gray-600">
-                        View room bookings by day and time slot.
-                    </p>
-                </div>
-
+            <div className="space-y-3">
                 <Link
                     href="/dashboard/student"
                     className="inline-flex w-fit rounded-md bg-pink-950 px-4 py-2 font-semibold text-white transition hover:bg-pink-900"
                 >
                     Back to dashboard
                 </Link>
+
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Timetable</h1>
+                    <p className="text-gray-600">
+                        Pick a date, then select an available room and time range for the booking form.
+                    </p>
+                </div>
             </div>
 
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-start gap-4">
                 <button
                     type="button"
-                    onClick={handlePreviousDay}
-                    disabled={selectedDayIndex === 0}
+                    onClick={handlePreviousDate}
+                    disabled={selectedDateIndex === 0}
                     className="rounded-md bg-[#B80050] px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {"<"}
                 </button>
 
-                <div className="rounded-full bg-pink-200 px-8 py-3 text-center">
-                    <p className="text-lg font-semibold text-gray-900">{selectedDay}</p>
+                <div className="rounded-full bg-pink-200 px-6 py-3 text-left">
+                    <p className="text-base font-semibold text-gray-900">{selectedDate.label}</p>
                 </div>
 
                 <button
                     type="button"
-                    onClick={handleNextDay}
-                    disabled={selectedDayIndex === days.length - 1}
+                    onClick={handleNextDate}
+                    disabled={selectedDateIndex === dateOptions.length - 1}
                     className="rounded-md bg-[#B80050] px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {">"}
                 </button>
             </div>
 
+            <div className="rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-[#B80050]">
+                Students can only move forward from today's date. Existing bookings are shown in red.
+            </div>
+
+            {selectedRange && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                    Selected booking: {selectedRange.roomName}, {selectedDate.label},{" "}
+                    {formatTimeLabel(timeSlots[selectedRange.startSlotIndex].value)} to{" "}
+                    {formatTimeLabel(
+                        selectedRange.endSlotIndex + 1 < timeSlots.length
+                            ? timeSlots[selectedRange.endSlotIndex + 1].value
+                            : `${String(closingHour).padStart(2, "0")}:00`,
+                    )}
+                </div>
+            )}
+
             <div className="max-h-[650px] overflow-x-auto overflow-y-auto rounded-lg border border-gray-300">
                 <table className="min-w-max border-collapse text-sm">
                     <thead className="sticky top-0 z-10">
                         <tr>
-                            <th className="sticky left-0 border border-gray-400 bg-gray-200 p-3 text-left">
-                                Time
+                            <th className="sticky left-0 z-20 border border-gray-400 bg-gray-200 p-3 text-left">
+                                Room
                             </th>
-                            {rooms.map((room) => (
+                            {timeSlots.map((slot) => (
                                 <th
-                                    key={room}
+                                    key={slot.value}
                                     className="border border-gray-400 bg-gray-200 p-3 text-center"
                                 >
-                                    {room}
+                                    {slot.label}
                                 </th>
                             ))}
                         </tr>
                     </thead>
 
                     <tbody>
-                        {timeSlots.map((time) => (
-                            <tr key={time}>
-                                <td className="sticky left-0 border border-gray-400 bg-white p-3 font-medium">
-                                    {time}
+                        {rooms.map((room) => (
+                            <tr key={room.id}>
+                                <td className="sticky left-0 z-10 border border-gray-400 bg-white p-3 font-medium">
+                                    {room.name}
                                 </td>
 
-                                {rooms.map((room) => {
-                                    const activeBooking = bookings.find((booking) =>
-                                        isRoomBooked(
-                                            booking.day,
-                                            booking.room,
-                                            booking.startTime,
-                                            booking.endTime,
-                                            selectedDay,
-                                            room,
-                                            time,
-                                        ),
-                                    );
+                                {timeSlots.map((slot, slotIndex) => {
+                                    const activeBooking = getActiveBooking(room.name, slot.value);
+                                    const selected = isSelected(room.name, slotIndex);
 
                                     return (
                                         <td
-                                            key={`${time}-${room}`}
-                                            className={`h-16 min-w-[140px] border border-gray-400 p-2 text-center ${activeBooking ? "bg-red-500 font-medium text-white" : "bg-white"
-                                                }`}
+                                            key={`${room.id}-${slot.value}`}
+                                            onClick={() => handleSlotClick(room.name, slotIndex)}
+                                            className={`h-16 min-w-[120px] border border-gray-400 p-2 text-center transition ${
+                                                activeBooking
+                                                    ? "cursor-not-allowed bg-red-500 font-medium text-white"
+                                                    : selected
+                                                        ? "cursor-pointer bg-blue-500 font-medium text-white"
+                                                        : "cursor-pointer bg-white hover:bg-pink-50"
+                                            }`}
                                         >
-                                            {activeBooking ? activeBooking.title : ""}
+                                            {activeBooking ? "Booked" : ""}
                                         </td>
                                     );
                                 })}
