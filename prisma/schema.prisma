@@ -21,10 +21,9 @@ model User {
   favourites         Favourite[]
   PasswordSetupToken PasswordSetupToken[]
   sessions           Session[]
-  favourites         Favourite[]
 
-  collaborations  BookingCollaborator[] @relation
-  sentInvitations BookingCollaborator[] @relation("InvitedBy")
+  collaborations     BookingCollaborator[]
+  sentInvitations    BookingCollaborator[] @relation("InvitedBy")
 }
 
 model AuditLog {
@@ -123,8 +122,6 @@ model Room {
   type       String?     @db.VarChar(255)
   side_rooms Int?
   created_at DateTime    @default(now())
-  side_rooms Int?
-  type       String?     @db.VarChar(255)
   bookings   Booking[]
   equipment  Equipment[]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Timetable from "./modals/timetable";
 
 type Room = {
@@ -37,35 +37,44 @@ type Props = {
     bookingItems: BookingItem[];
     onRemoveItem: (id: number) => void;
     clearItems: () => void;
+    selectedSlot: SelectedBookingSlot | null;
+    isBooking: boolean;
+    setIsBooking: (value: boolean) => void;
+    onSelectedSlotChange: (slot: SelectedBookingSlot | null) => void;
 };
 
 export default function Booking({
     bookingItems,
     onRemoveItem,
     clearItems,
+    selectedSlot,
+    isBooking,
+    setIsBooking,
+    onSelectedSlotChange,
 }: Props) {
-    const [isBooking, setIsBooking] = useState(false);
     const [title, setTitle] = useState("");
     const [timeTableOpen, setTimeTableOpen] = useState(false);
 
     const [rooms, setRooms] = useState<Room[]>([]);
     const [bookings, setBookings] = useState<BookingData[]>([]);
 
-    const [selectedSlot, setSelectedSlot] = useState<SelectedBookingSlot | null>(null);
+    const [hsFile, setHsFile] = useState<File | null>(null);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
+    const hsInputRef = useRef<HTMLInputElement>(null);
+
+    const [otherRequirement, setOtherRequirement] = useState("");
 
     useEffect(() => {
         async function fetchData() {
             try {
-                const [roomsRes] = await Promise.all([
-                    fetch("/api/booking/rooms"),
-                ]);
+                const roomsRes = await fetch("/api/booking/rooms");
 
                 if (!roomsRes.ok) {
                     throw new Error("Failed to fetch rooms");
                 }
 
                 const roomsData: Room[] = await roomsRes.json();
-
                 setRooms(roomsData);
             } catch (error) {
                 console.error("Failed to load timetable data:", error);
@@ -74,6 +83,42 @@ export default function Booking({
 
         fetchData();
     }, []);
+
+    const handleDraft = async () => {
+        setSubmitting(true);
+        setSubmitError(null);
+        try {
+            const res = await fetch("/api/booking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    lesson: title,
+                    room_name: selectedSlot?.roomName,
+                    booking_date: selectedSlot?.bookingDate,
+                    start_time: selectedSlot?.startTime,
+                    end_time: selectedSlot?.endTime,
+                    other_requirement: otherRequirement,
+                    items: bookingItems.map((item) => ({
+                        id: item.id,
+                        quantity: item.quantity,
+                    })),
+                }),
+            });
+
+            if (!res.ok) throw new Error("Failed to create booking");
+
+            setIsBooking(false);
+            setTitle("");
+            setOtherRequirement("");
+            onSelectedSlotChange(null);
+            clearItems();
+
+        } catch {
+            setSubmitError("Something went wrong. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <>
@@ -154,6 +199,8 @@ export default function Booking({
 
                             <textarea
                                 placeholder="Other specific requirements"
+                                value={otherRequirement}
+                                onChange={(e) => setOtherRequirement(e.target.value)}
                                 className="w-full px-3 py-2 text-xs border border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none"
                                 rows={3}
                             />
@@ -161,38 +208,81 @@ export default function Booking({
                             <hr className="border border-gray-200" />
 
                             <div className="flex flex-row gap-2">
-                                <button className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer bg-[#B80050] hover:bg-[#9a0044] text-white">
-                                    Attach H&amp;S Form
+                                <input
+                                    ref={hsInputRef}
+                                    type="file"
+                                    accept=".pdf,.doc,.docx"
+                                    className="hidden"
+                                    onChange={(e) => setHsFile(e.target.files?.[0] ?? null)}
+                                />
+
+                                <button
+                                    onClick={() => hsInputRef.current?.click()}
+                                    className={`flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
+            rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
+            ${hsFile
+                                            ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
+                                            : "bg-[#B80050] hover:bg-[#9a0044] text-white"
+                                        }`}
+                                >
+                                    {hsFile ? `✓ ${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
                                 </button>
-                                <button className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer bg-[#B80050] hover:bg-[#9a0044] text-white">
+
+                                <button className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
+        rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
+        bg-[#B80050] hover:bg-[#9a0044] text-white">
                                     Invite Contributor
                                 </button>
                             </div>
                         </div>
 
-                        <div className="flex flex-row gap-2 p-4 border-t border-gray-200 shrink-0">
-                            <button
-                                onClick={() => {
-                                    setIsBooking(false);
-                                    setTitle("");
-                                    clearItems();
-                                }}
-                                className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
-                                transition-all cursor-pointer"
-                            >
-                                Cancel
-                            </button>
-                            <button className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                                rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
-                                transition-all cursor-pointer">
-                                Draft
-                            </button>
-                            <button className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                                rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
-                                hover:shadow-md transition-all cursor-pointer">
-                                Finalise
-                            </button>
+                        <div className="flex flex-col gap-2 p-4 border-t border-gray-200 shrink-0">
+                            {submitError && (
+                                <p className="text-xs text-red-500 text-center">{submitError}</p>
+                            )}
+                            <div className="flex flex-row gap-2">
+                                <button
+                                    onClick={() => {
+                                        setIsBooking(false);
+                                        setTitle("");
+                                        setHsFile(null);
+                                        setSubmitError(null);
+                                        onSelectedSlotChange(null);
+                                        clearItems();
+                                    }}
+                                    className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+            rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+            transition-all cursor-pointer"
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    onClick={handleDraft}
+                                    disabled={submitting}
+                                    className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+    rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
+    disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                >
+                                    {submitting ? "Saving..." : "Draft"}
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        if (!hsFile) {
+                                            setSubmitError("Please attach a H&S form before finalising.");
+                                            return;
+                                        }
+                                        setSubmitError(null);
+                                        // submit function goes here later
+                                    }}
+                                    className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+            rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
+            hover:shadow-md transition-all cursor-pointer"
+                                >
+                                    Finalise
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -204,7 +294,7 @@ export default function Booking({
                 rooms={rooms}
                 bookings={bookings}
                 initialDate={new Date().toISOString().split("T")[0]}
-                onSelectionChange={setSelectedSlot}
+                onSelectionChange={onSelectedSlotChange}
             />
         </>
     );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ErrorModal from "./modals/errorMessage";
 
 type Room = {
     id: number;
@@ -14,8 +15,17 @@ type BookingItem = {
     quantity: number;
 };
 
+type SelectedBookingSlot = {
+    bookingDate: string;
+    roomName: string;
+    startTime: string;
+    endTime: string;
+};
+
 type Props = {
     selectedRoom: Room | null;
+    selectedSlot: SelectedBookingSlot | null;
+    isBooking: boolean;
     onAddItem: (item: BookingItem) => void;
 };
 
@@ -48,10 +58,11 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Favourites": [],
 };
 
-export default function Catalogue({ selectedRoom, onAddItem }: Props) {
+export default function Catalogue({ selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<string>("General Equipment");
     const [search, setSearch] = useState("");
     const [favourites, setFavourites] = useState<Set<number>>(new Set());
@@ -118,6 +129,26 @@ export default function Catalogue({ selectedRoom, onAddItem }: Props) {
         }
     };
 
+    const handleAddClick = (item: Equipment) => {
+        const hasBookingSlot =
+            selectedSlot &&
+            selectedSlot.roomName &&
+            selectedSlot.bookingDate &&
+            selectedSlot.startTime &&
+            selectedSlot.endTime;
+
+        if (!hasBookingSlot) {
+            setErrorMessage("Please select room, date and time before adding items to booking.");
+            return;
+        }
+
+        onAddItem({
+            id: item.id,
+            name: item.name,
+            quantity: 1,
+        });
+    };
+
     return (
         <div className="flex justify-center px-6 py-8 w-[75%]">
             <div className="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
@@ -167,7 +198,7 @@ export default function Catalogue({ selectedRoom, onAddItem }: Props) {
                 ) : (
                     <>
                         {/* Header row */}
-                        <div className="grid grid-cols-[2rem_2fr_1fr_1fr_1fr] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50">
+                        <div className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 h-10 items-center">
                             <div />
                             <p className="text-xs font-medium text-gray-500">Item</p>
                             <p className="text-xs font-medium text-gray-500">Category</p>
@@ -180,7 +211,7 @@ export default function Catalogue({ selectedRoom, onAddItem }: Props) {
                                 filtered.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="grid grid-cols-[2rem_2fr_1fr_1fr_1fr] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white"
+                                        className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white h-14"
                                     >
                                         {/* Favourite Star */}
                                         <button
@@ -214,10 +245,18 @@ export default function Catalogue({ selectedRoom, onAddItem }: Props) {
                                         </span>
 
                                         {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
-                                        <button className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer justify-self-end"
-                                            onClick={() => onAddItem({ id: item.id, name: item.name, quantity: 1 })}>
-                                            Add Item
-                                        </button>
+                                        <div className="w-[170px] flex justify-end">
+                                            {isBooking ? (
+                                                <button
+                                                    className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                                                    onClick={() => handleAddClick(item)}
+                                                >
+                                                    Add Item
+                                                </button>
+                                            ) : (
+                                                <div className="w-[89px]" />
+                                            )}
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -231,6 +270,13 @@ export default function Catalogue({ selectedRoom, onAddItem }: Props) {
                     </>
                 )}
             </div>
+            <ErrorModal
+                open={errorMessage !== null}
+                title="Booking details required"
+                message={errorMessage ?? ""}
+                buttonText="OK"
+                onClose={() => setErrorMessage(null)}
+            />
         </div>
     );
 }
