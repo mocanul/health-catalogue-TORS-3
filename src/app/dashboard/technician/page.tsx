@@ -1,5 +1,4 @@
 import Navbar from "@/components/Navbar"
-import Bookings from "@/components/bookingTable"
 
 export default function Home() {
 
@@ -9,12 +8,21 @@ export default function Home() {
       <div className="flex min-h-screen flex-col">
         <Navbar showLogout={true} links={[
           {href: "/dashboard/technician", label: "Home", primary: true},
-          {href: "/dashboard/student/catalogue", label: "Order Catalogue"},
-          {href: "/dashboard/student/editCatalogue", label: "Edit Catalogue"}
+          {href: "/dashboard/technician/bookings", label: "Bookings"},
+          {href: "/dashboard/technician/catalogue", label: "Order Catalogue"},
+          {href: "/dashboard/technician/editCatalogue", label: "Edit Catalogue"}
         ]}/>
 
-        <Bookings/>
-      
+        <main className="min-h-screen flex items-center justify-center bg-gray-100">
+          <div className="p-10 bg-white rounded-xl shadow-lg text-center">
+              <h1 className="text-3xl font-bold mb-4">
+                  STAFF DASHBOARD
+              </h1>
+              <p className="text-gray-600">
+                  Authentication successful.
+              </p>
+          </div>
+        </main>
       </div>
   )
 }
