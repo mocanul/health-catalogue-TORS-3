@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type TimetableRoom = {
@@ -30,12 +29,13 @@ type TimetableProps = {
     initialDate: string;
     numberOfDays?: number;
     onSelectionChange?: (selection: TimetableSelection | null) => void;
+    open: boolean;
+    onClose: () => void;
 };
 
 const openingHour = 8;
 const closingHour = 22;
 
-// The grid is built from hourly start times, so 4pm is the final slot for a 4pm-5pm booking.
 const timeSlots = Array.from({ length: closingHour - openingHour }, (_, index) => {
     const hour = openingHour + index;
 
@@ -102,6 +102,8 @@ export default function Timetable({
     initialDate,
     numberOfDays = 14,
     onSelectionChange,
+    open,
+    onClose,
 }: TimetableProps) {
     const dateOptions = useMemo(() => {
         const startDate = new Date(`${initialDate}T00:00:00`);
@@ -160,7 +162,6 @@ export default function Timetable({
 
         setSelectedRange(nextSelection);
 
-        // This keeps the timetable reusable inside the separate booking flow later.
         onSelectionChange?.({
             bookingDate: selectedDate.value,
             roomName,
@@ -202,113 +203,122 @@ export default function Timetable({
         );
     }
 
+    if (!open) return null;
+
     return (
-        <section className="mx-auto max-w-400 space-y-6 rounded-2xl bg-white p-6 shadow-lg">
-            <div className="space-y-3">
-                <Link
-                    href="/dashboard/student"
-                    className="inline-flex w-fit rounded-md bg-pink-950 px-4 py-2 font-semibold text-white transition hover:bg-pink-900"
-                >
-                    Back to dashboard
-                </Link>
+        <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/50 p-4">
+            <section className="flex h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                <div className="flex items-start justify-between border-b border-gray-200 px-6 py-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Timetable</h1>
+                        <p className="text-gray-600">
+                            Pick a date, then select an available room and time range for the booking form.
+                        </p>
+                    </div>
 
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Timetable</h1>
-                    <p className="text-gray-600">
-                        Pick a date, then select an available room and time range for the booking form.
-                    </p>
-                </div>
-            </div>
-
-            <div className="flex items-center justify-start gap-4">
-                <button
-                    type="button"
-                    onClick={handlePreviousDate}
-                    disabled={selectedDateIndex === 0}
-                    className="rounded-md bg-[#B80050] px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    {"<"}
-                </button>
-
-                <div className="rounded-full bg-pink-200 px-6 py-3 text-left">
-                    <p className="text-base font-semibold text-gray-900">{selectedDate.label}</p>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="rounded-md px-3 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                    >
+                        ✕
+                    </button>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={handleNextDate}
-                    disabled={selectedDateIndex === dateOptions.length - 1}
-                    className="rounded-md bg-[#B80050] px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    {">"}
-                </button>
-            </div>
+                <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
+                    <div className="flex items-center justify-start gap-4">
+                        <button
+                            type="button"
+                            onClick={handlePreviousDate}
+                            disabled={selectedDateIndex === 0}
+                            className="rounded-md bg-[#B80050] px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {"<"}
+                        </button>
 
-            <div className="rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-[#B80050]">
-                Students can only move forward from today&apos;s date. Existing bookings are shown in red.
-            </div>
+                        <div className="w-56 rounded-full bg-pink-200 px-6 py-3 text-center">
+                            <p className="text-base font-semibold text-gray-900 truncate">
+                                {selectedDate.label}
+                            </p>
+                        </div>
 
-            {selectedRange && (
-                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-                    Selected booking: {selectedRange.roomName}, {selectedDate.label},{" "}
-                    {formatTimeLabel(timeSlots[selectedRange.startSlotIndex].value)} to{" "}
-                    {formatTimeLabel(
-                        selectedRange.endSlotIndex + 1 < timeSlots.length
-                            ? timeSlots[selectedRange.endSlotIndex + 1].value
-                            : `${String(closingHour).padStart(2, "0")}:00`,
+                        <button
+                            type="button"
+                            onClick={handleNextDate}
+                            disabled={selectedDateIndex === dateOptions.length - 1}
+                            className="rounded-md bg-[#B80050] px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {">"}
+                        </button>
+                    </div>
+
+                    <div className="rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-[#B80050]">
+                        Students can only move forward from today&apos;s date. Existing bookings are shown in red.
+                    </div>
+
+                    {selectedRange && (
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                            Selected booking: {selectedRange.roomName}, {selectedDate.label},{" "}
+                            {formatTimeLabel(timeSlots[selectedRange.startSlotIndex].value)} to{" "}
+                            {formatTimeLabel(
+                                selectedRange.endSlotIndex + 1 < timeSlots.length
+                                    ? timeSlots[selectedRange.endSlotIndex + 1].value
+                                    : `${String(closingHour).padStart(2, "0")}:00`,
+                            )}
+                        </div>
                     )}
-                </div>
-            )}
 
-            <div className="max-h-162.5 overflow-x-auto overflow-y-auto rounded-lg border border-gray-300">
-                <table className="min-w-max border-collapse text-sm">
-                    <thead className="sticky top-0 z-10">
-                        <tr>
-                            <th className="sticky left-0 z-20 border border-gray-400 bg-gray-200 p-3 text-left">
-                                Room
-                            </th>
-                            {timeSlots.map((slot) => (
-                                <th
-                                    key={slot.value}
-                                    className="border border-gray-400 bg-gray-200 p-3 text-center"
-                                >
-                                    {slot.label}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {rooms.map((room) => (
-                            <tr key={room.id}>
-                                <td className="sticky left-0 z-10 border border-gray-400 bg-white p-3 font-medium">
-                                    {room.name}
-                                </td>
-
-                                {timeSlots.map((slot, slotIndex) => {
-                                    const activeBooking = getActiveBooking(room.name, slot.value);
-                                    const selected = isSelected(room.name, slotIndex);
-
-                                    return (
-                                        <td
-                                            key={`${room.id}-${slot.value}`}
-                                            onClick={() => handleSlotClick(room.name, slotIndex)}
-                                            className={`h-16 min-w-30 border border-gray-400 p-2 text-center transition ${activeBooking
-                                                    ? "cursor-not-allowed bg-red-500 font-medium text-white"
-                                                    : selected
-                                                        ? "cursor-pointer bg-blue-500 font-medium text-white"
-                                                        : "cursor-pointer bg-white hover:bg-pink-50"
-                                                }`}
+                    <div className="flex-1 overflow-auto rounded-lg border border-gray-300">
+                        <table className="min-w-max border-collapse text-sm">
+                            <thead className="sticky top-0 z-30">
+                                <tr>
+                                    <th className="sticky top-0 left-0 z-40 border border-gray-400 bg-gray-200 p-3 text-left shadow-sm">
+                                        Room
+                                    </th>
+                                    {timeSlots.map((slot) => (
+                                        <th
+                                            key={slot.value}
+                                            className="sticky top-0 z-30 border border-gray-400 bg-gray-200 p-3 text-center"
                                         >
-                                            {activeBooking ? "Booked" : ""}
+                                            {slot.label}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {rooms.map((room) => (
+                                    <tr key={room.id}>
+                                        <td className="sticky left-0 z-20 border border-gray-400 bg-white p-3 font-medium shadow-sm">
+                                            {room.name}
                                         </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </section>
+
+                                        {timeSlots.map((slot, slotIndex) => {
+                                            const activeBooking = getActiveBooking(room.name, slot.value);
+                                            const selected = isSelected(room.name, slotIndex);
+
+                                            return (
+                                                <td
+                                                    key={`${room.id}-${slot.value}`}
+                                                    onClick={() => handleSlotClick(room.name, slotIndex)}
+                                                    className={`h-16 min-w-30 border border-gray-400 p-2 text-center transition ${activeBooking
+                                                            ? "cursor-not-allowed bg-red-500 font-medium text-white"
+                                                            : selected
+                                                                ? "cursor-pointer bg-blue-500 font-medium text-white"
+                                                                : "cursor-pointer bg-white hover:bg-pink-50"
+                                                        }`}
+                                                >
+                                                    {activeBooking ? "Booked" : ""}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
     );
 }
