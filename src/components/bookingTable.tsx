@@ -1,7 +1,27 @@
 import { prisma } from "@/lib/prisma";
+import {validateSession} from "@/lib/auth/session"
+import {cookies} from "next/headers"
+import { redirect } from "next/navigation";
 
 export default async function Bookings() {
+    const cookieStore = await cookies()
+    const sessionToken = cookieStore.get("session")?.value
+
+    if (!sessionToken) {
+        redirect("/login")
+    }
+
+    const user = await validateSession(sessionToken)
+
+    if (!user) {
+        redirect("/login")
+    }
+
+    const user_id = user?.id
+    const user_role = user?.role
+
     const booking = await prisma.booking.findMany({
+        where: user_role === "STUDENT" ? {created_by: user_id} : {},
         include:{
             user:{
                 select:{
