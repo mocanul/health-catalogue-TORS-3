@@ -203,7 +203,7 @@ export default function Timetable({
     }
 
     return (
-        <section className="mx-auto max-w-[1600px] space-y-6 rounded-2xl bg-white p-6 shadow-lg">
+        <section className="mx-auto max-w-400 space-y-6 rounded-2xl bg-white p-6 shadow-lg">
             <div className="space-y-3">
                 <Link
                     href="/dashboard/student"
@@ -245,7 +245,7 @@ export default function Timetable({
             </div>
 
             <div className="rounded-lg border border-pink-200 bg-pink-50 px-4 py-3 text-sm text-[#B80050]">
-                Students can only move forward from today's date. Existing bookings are shown in red.
+                Students can only move forward from today&apos;s date. Existing bookings are shown in red.
             </div>
 
             {selectedRange && (
@@ -260,7 +260,7 @@ export default function Timetable({
                 </div>
             )}
 
-            <div className="max-h-[650px] overflow-x-auto overflow-y-auto rounded-lg border border-gray-300">
+            <div className="max-h-162.5 overflow-x-auto overflow-y-auto rounded-lg border border-gray-300">
                 <table className="min-w-max border-collapse text-sm">
                     <thead className="sticky top-0 z-10">
                         <tr>
@@ -293,13 +293,12 @@ export default function Timetable({
                                         <td
                                             key={`${room.id}-${slot.value}`}
                                             onClick={() => handleSlotClick(room.name, slotIndex)}
-                                            className={`h-16 min-w-[120px] border border-gray-400 p-2 text-center transition ${
-                                                activeBooking
+                                            className={`h-16 min-w-30 border border-gray-400 p-2 text-center transition ${activeBooking
                                                     ? "cursor-not-allowed bg-red-500 font-medium text-white"
                                                     : selected
                                                         ? "cursor-pointer bg-blue-500 font-medium text-white"
                                                         : "cursor-pointer bg-white hover:bg-pink-50"
-                                            }`}
+                                                }`}
                                         >
                                             {activeBooking ? "Booked" : ""}
                                         </td>
