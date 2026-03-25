@@ -2,6 +2,23 @@
 
 import { useState, useEffect } from "react";
 
+type Room = {
+    id: number;
+    name: string;
+    type: string | null;
+};
+
+type BookingItem = {
+    id: number;
+    name: string;
+    quantity: number;
+};
+
+type Props = {
+    selectedRoom: Room | null;
+    onAddItem: (item: BookingItem) => void;
+};
+
 type Equipment = {
     id: number;
     name: string;
@@ -31,7 +48,7 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Favourites": [],
 };
 
-export default function Catalogue() {
+export default function Catalogue({ selectedRoom, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -197,7 +214,8 @@ export default function Catalogue() {
                                         </span>
 
                                         {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
-                                        <button className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer justify-self-end">
+                                        <button className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer justify-self-end"
+                                            onClick={() => onAddItem({ id: item.id, name: item.name, quantity: 1 })}>
                                             Add Item
                                         </button>
                                     </div>
