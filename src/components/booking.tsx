@@ -23,7 +23,7 @@ export default function Booking() {
     const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null);
 
     return (
-        <div className="border-2 border-gray-100 border-r flex-1 flex items-center justify-center m-5">
+        <div className="border-2 border-gray-100 border-r flex-1 flex items-center justify-center m-8">
             {!isBooking ? (
                 <button
                     onClick={() => setIsBooking(true)}

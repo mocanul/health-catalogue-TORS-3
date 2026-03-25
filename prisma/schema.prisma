@@ -21,6 +21,9 @@ model User {
   PasswordSetupToken PasswordSetupToken[]
   sessions           Session[]
   favourites         Favourite[]
+
+  collaborations  BookingCollaborator[] @relation
+  sentInvitations BookingCollaborator[] @relation("InvitedBy")
 }
 
 model AuditLog {
@@ -39,23 +42,40 @@ model AuditLog {
 }
 
 model Booking {
-  id           Int           @id @default(autoincrement())
-  created_by   Int
-  room_id      Int
-  description  String?
-  booking_date DateTime      @db.Date
-  start_time   DateTime      @db.Time(6)
-  end_time     DateTime      @db.Time(6)
-  status       BookingStatus @default(DRAFT)
-  created_at   DateTime      @default(now())
-  updated_at   DateTime
-  user         User          @relation(fields: [created_by], references: [id])
-  room         Room          @relation(fields: [room_id], references: [id])
-  bookingItems BookingItem[]
+  id                Int                   @id @default(autoincrement())
+  created_by        Int
+  room_id           Int
+  lesson            String?               @db.VarChar(255)
+  other_requirement String?
+  booking_date      DateTime              @db.Date
+  start_time        DateTime              @db.Time(6)
+  end_time          DateTime              @db.Time(6)
+  status            BookingStatus         @default(DRAFT)
+  created_at        DateTime              @default(now())
+  updated_at        DateTime              @updatedAt
+  user              User                  @relation(fields: [created_by], references: [id])
+  room              Room                  @relation(fields: [room_id], references: [id])
+  bookingItems      BookingItem[]
+  collaborators     BookingCollaborator[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
+}
+
+model BookingCollaborator {
+  booking_id Int
+  user_id    Int
+  invited_by Int
+  status     CollaboratorStatus @default(PENDING)
+
+  booking Booking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id])
+  inviter User    @relation("InvitedBy", fields: [invited_by], references: [id])
+
+  @@id([booking_id, user_id])
+  @@index([user_id])
+  @@index([invited_by])
 }
 
 model BookingItem {
@@ -158,4 +178,10 @@ enum UserRole {
   TECHNICIAN
   STAFF
   STUDENT
+}
+
+enum CollaboratorStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }

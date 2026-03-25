@@ -15,9 +15,7 @@ export default async function Home() {
       ]} />
 
       <div className="flex flex-row flex-1">
-        <div className="w-[70%] m-5">
-          <Catalogue />
-        </div>
+        <Catalogue />
         <Booking />
       </div>
     </div>

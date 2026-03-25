@@ -102,8 +102,8 @@ export default function Catalogue() {
     };
 
     return (
-        <div className="flex justify-center px-6 py-8">
-            <div className="w-full max-w-6xl bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        <div className="flex justify-center px-6 py-8 w-[75%]">
+            <div className="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
 
                 {/* Tab Bar */}
                 <div className="border-b border-gray-200 px-4 flex items-center justify-between">
@@ -158,7 +158,7 @@ export default function Catalogue() {
                             <div />
                         </div>
 
-                        <div className="divide-y divide-gray-100 max-h-130 overflow-y-auto">
+                        <div className="divide-y divide-gray-100 max-h-170 overflow-y-auto">
                             {filtered.length > 0 ? (
                                 filtered.map((item) => (
                                     <div
