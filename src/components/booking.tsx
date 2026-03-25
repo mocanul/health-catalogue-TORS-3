@@ -24,6 +24,13 @@ type BookingData = {
     status: string;
 };
 
+type SelectedBookingSlot = {
+    bookingDate: string;
+    roomName: string;
+    startTime: string;
+    endTime: string;
+};
+
 type Props = {
     selectedRoom: Room | null;
     onRoomSelect: (room: Room) => void;
@@ -43,6 +50,8 @@ export default function Booking({
 
     const [rooms, setRooms] = useState<Room[]>([]);
     const [bookings, setBookings] = useState<BookingData[]>([]);
+
+    const [selectedSlot, setSelectedSlot] = useState<SelectedBookingSlot | null>(null);
 
     useEffect(() => {
         async function fetchData() {
@@ -99,11 +108,11 @@ export default function Booking({
                                 <button
                                     type="button"
                                     onClick={() => setTimeTableOpen(true)}
-                                    className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
-    rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
-    bg-[#B80050] hover:bg-[#9a0044] text-white"
+                                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#B80050] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#9a0044] hover:shadow-md cursor-pointer"
                                 >
-                                    Pick room, date and time
+                                    {selectedSlot
+                                        ? `${selectedSlot.roomName} | ${selectedSlot.bookingDate} | ${selectedSlot.startTime} - ${selectedSlot.endTime}`
+                                        : "Pick room, date and time"}
                                 </button>
                             </div>
 
@@ -195,6 +204,7 @@ export default function Booking({
                 rooms={rooms}
                 bookings={bookings}
                 initialDate={new Date().toISOString().split("T")[0]}
+                onSelectionChange={setSelectedSlot}
             />
         </>
     );

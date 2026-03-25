@@ -203,6 +203,20 @@ export default function Timetable({
         );
     }
 
+    function buildSelection() {
+        if (!selectedRange) return null;
+
+        return {
+            bookingDate: selectedDate.value,
+            roomName: selectedRange.roomName,
+            startTime: timeSlots[selectedRange.startSlotIndex].value,
+            endTime:
+                selectedRange.endSlotIndex + 1 < timeSlots.length
+                    ? timeSlots[selectedRange.endSlotIndex + 1].value
+                    : `${String(closingHour).padStart(2, "0")}:00`,
+        };
+    }
+
     if (!open) return null;
 
     return (
@@ -302,10 +316,10 @@ export default function Timetable({
                                                     key={`${room.id}-${slot.value}`}
                                                     onClick={() => handleSlotClick(room.name, slotIndex)}
                                                     className={`h-16 min-w-30 border border-gray-400 p-2 text-center transition ${activeBooking
-                                                            ? "cursor-not-allowed bg-red-500 font-medium text-white"
-                                                            : selected
-                                                                ? "cursor-pointer bg-blue-500 font-medium text-white"
-                                                                : "cursor-pointer bg-white hover:bg-pink-50"
+                                                        ? "cursor-not-allowed bg-red-500 font-medium text-white"
+                                                        : selected
+                                                            ? "cursor-pointer bg-blue-500 font-medium text-white"
+                                                            : "cursor-pointer bg-white hover:bg-pink-50"
                                                         }`}
                                                 >
                                                     {activeBooking ? "Booked" : ""}
@@ -317,6 +331,35 @@ export default function Timetable({
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div className="flex justify-end gap-2 border-t border-gray-200 px-6 py-4">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setSelectedRange(null);
+                            onSelectionChange?.(null);
+                            onClose();
+                        }}
+                        className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        disabled={!selectedRange}
+                        onClick={() => {
+                            const selection = buildSelection();
+
+                            if (selection) {
+                                onSelectionChange?.(selection);
+                                onClose();
+                            }
+                        }}
+                        className="rounded-lg bg-[#B80050] px-4 py-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#9a0044]"
+                    >
+                        Save
+                    </button>
                 </div>
             </section>
         </div>
