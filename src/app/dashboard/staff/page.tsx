@@ -82,11 +82,11 @@ export default function StaffDashboard() {
                                     Task Checklist
                                 </h2>
                                 <p className="mt-2 text-gray-600">
-                                    Today's assigned room setups and strip downs will appear here in order.
+                                    Today&apos;s assigned room setups and strip downs will appear here in order.
                                 </p>
                             </div>
 
-                            <div className="mt-6 min-h-[460px] rounded-xl border-2 border-dashed border-gray-200 bg-gray-50" />
+                            <div className="mt-6 min-h-115 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50" />
                         </section>
 
                         <div className="flex flex-col gap-6">
