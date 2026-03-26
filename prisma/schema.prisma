@@ -24,14 +24,8 @@ model AuditLog {
 
 model Booking {
   id                Int               @id @default(autoincrement())
-  id                Int               @id @default(autoincrement())
   created_by        Int
   room_id           Int
-  booking_date      DateTime          @db.Date
-  status            BookingStatus     @default(DRAFT)
-  created_at        DateTime          @default(now())
-  updated_at        DateTime          @updatedAt
-  lesson            String?           @db.VarChar(255)
   booking_date      DateTime          @db.Date
   status            BookingStatus     @default(DRAFT)
   created_at        DateTime          @default(now())
@@ -42,6 +36,7 @@ model Booking {
   end_time          String            @db.VarChar(255)
   review_notes      String?
   hs_form_path      String?
+  description       String?
   user              User              @relation(fields: [created_by], references: [id])
   room              Room              @relation(fields: [room_id], references: [id])
   bookingDocuments  BookingDocument[]
@@ -63,9 +58,9 @@ model BookingInvite {
   sent_at     DateTime            @default(now())
   accepted_at DateTime?
 
-  booking  Booking? @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  sender   User    @relation("InviteSender", fields: [sent_by], references: [id])
-  receiver User    @relation("InviteReceiver", fields: [sent_to], references: [id])
+  booking  Booking? @relation(fields: [booking_id], references: [id], onDelete: SetNull)
+  sender   User     @relation("InviteSender", fields: [sent_by], references: [id])
+  receiver User     @relation("InviteReceiver", fields: [sent_to], references: [id])
 
   @@index([booking_id])
   @@index([sent_by])
@@ -98,15 +93,18 @@ model BookingItem {
 }
 
 model BookingTask {
-  id          Int        @id @default(autoincrement())
-  booking_id  Int
-  assigned_to Int
-  task_type   TaskType
-  status      TaskStatus @default(PENDING)
-  created_at  DateTime   @default(now())
-  updated_at  DateTime
-  user        User       @relation(fields: [assigned_to], references: [id])
-  booking     Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  id                Int        @id @default(autoincrement())
+  booking_id        Int
+  assigned_to       Int
+  task_type         TaskType
+  status            TaskStatus @default(PENDING)
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
+  equipment_picked  String?
+  missing_equipment String?
+  task_notes        String?
+  user              User       @relation(fields: [assigned_to], references: [id])
+  booking           Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
   @@index([assigned_to])
   @@index([booking_id])
@@ -131,8 +129,6 @@ model Equipment {
 model Favourite {
   user_id      Int
   equipment_id Int
-  equipment    Equipment @relation(fields: [equipment_id], references: [id])
-  user         User      @relation(fields: [user_id], references: [id])
   equipment    Equipment @relation(fields: [equipment_id], references: [id])
   user         User      @relation(fields: [user_id], references: [id])
 
@@ -202,9 +198,8 @@ model User {
   favourites          Favourite[]
   passwordSetupTokens PasswordSetupToken[]
   sessions            Session[]
-
-  sentInvites     BookingInvite[] @relation("InviteSender")
-  receivedInvites BookingInvite[] @relation("InviteReceiver")
+  sentInvites         BookingInvite[]      @relation("InviteSender")
+  receivedInvites     BookingInvite[]      @relation("InviteReceiver")
 }
 
 enum BookingDocumentType {
@@ -240,10 +235,6 @@ enum UserRole {
 
 enum BookingInviteStatus {
   PENDING
-  COMPLETED
-}
-
-enum TaskType {
-  SETUP
-  STRIPDOWN
+  ACCEPTED
+  REJECTED
 }
