@@ -89,7 +89,7 @@ export default async function TechnicianDashboard() {
             include: {
                 user: true,
                 room: true,
-                documents: true,
+                bookingDocuments: true,  // was documents
                 bookingItems: {
                     include: {
                         equipment: true,
@@ -113,7 +113,7 @@ export default async function TechnicianDashboard() {
         }),
         prisma.bookingTask.findMany({
             include: {
-                assignee: true,
+                user: true,  // was assignee
                 booking: {
                     include: {
                         user: true,
@@ -144,10 +144,10 @@ export default async function TechnicianDashboard() {
             booking.user.email,
         roomName: booking.room.name,
         otherRequirements: booking.description || "No additional notes provided.",
-        documents: booking.documents.map((document) => ({
-            id: document.id,
-            fileName: document.file_name,
-            filePath: document.file_path,
+        documents: booking.bookingDocuments.map((doc) => ({
+            id: doc.id,
+            fileName: doc.file_name,
+            filePath: doc.file_path,
         })),
         equipmentItems: booking.bookingItems.map((item) => ({
             id: item.id,
@@ -172,8 +172,8 @@ export default async function TechnicianDashboard() {
         lesson: assignment.booking.lesson || "No lesson provided",
         taskType: assignment.task_type,
         assigneeName:
-            `${assignment.assignee.first_name ?? ""} ${assignment.assignee.last_name ?? ""}`.trim() ||
-            assignment.assignee.email,
+            `${assignment.user.first_name ?? ""} ${assignment.user.last_name ?? ""}`.trim() ||
+            assignment.user.email,
         status: assignment.status,
         studentName:
             `${assignment.booking.user.first_name ?? ""} ${assignment.booking.user.last_name ?? ""}`.trim() ||
@@ -204,8 +204,8 @@ export default async function TechnicianDashboard() {
                 ]}
             />
 
-            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(184,0,80,0.12),_transparent_28%),linear-gradient(180deg,_#fdf7fa_0%,_#f3f4f6_45%,_#eef1f4_100%)] px-6 py-10">
-                <section className="mx-auto flex max-w-[1500px] flex-col gap-8">
+            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(184,0,80,0.12),transparent_28%),linear-gradient(180deg,#fdf7fa_0%,#f3f4f6_45%,#eef1f4_100%)] px-6 py-10">
+                <section className="mx-auto flex max-w-375 flex-col gap-8">
                     <div className="rounded-3xl border border-white/70 bg-white/90 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
                         <span className="inline-flex rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-900">
                             Senior technician view
