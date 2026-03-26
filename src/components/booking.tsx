@@ -63,7 +63,7 @@ export default function Booking({
     const [timeTableOpen, setTimeTableOpen] = useState(false);
 
     const [rooms, setRooms] = useState<Room[]>([]);
-    const [bookings] = useState<BookingData[]>([]);
+    const [bookings, setBookings] = useState<BookingData[]>([]);
 
     const [hsFile, setHsFile] = useState<File | null>(null);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -86,6 +86,29 @@ export default function Booking({
 
                 const roomsData: Room[] = await roomsRes.json();
                 setRooms(roomsData);
+            } catch (error) {
+                console.error("Failed to load timetable data:", error);
+            }
+        }
+
+        fetchData();
+    }, []);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const [roomsRes, bookingsRes] = await Promise.all([
+                    fetch("/api/booking/rooms"),
+                    fetch("/api/booking/timetable"),
+                ]);
+
+                if (!roomsRes.ok || !bookingsRes.ok) throw new Error("Failed to fetch data");
+
+                const roomsData: Room[] = await roomsRes.json();
+                const bookingsData: BookingData[] = await bookingsRes.json();
+
+                setRooms(roomsData);
+                setBookings(bookingsData);
             } catch (error) {
                 console.error("Failed to load timetable data:", error);
             }

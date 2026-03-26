@@ -316,7 +316,7 @@ export default function Timetable({
                                                     key={`${room.id}-${slot.value}`}
                                                     onClick={() => handleSlotClick(room.name, slotIndex)}
                                                     className={`h-16 min-w-30 border border-gray-400 p-2 text-center transition ${activeBooking
-                                                        ? "cursor-not-allowed bg-red-500 font-medium text-white"
+                                                        ? "cursor-not-allowed bg-red-400 font-medium text-white"
                                                         : selected
                                                             ? "cursor-pointer bg-blue-500 font-medium text-white"
                                                             : "cursor-pointer bg-white hover:bg-pink-50"
