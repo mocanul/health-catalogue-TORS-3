@@ -177,7 +177,34 @@ export default function Booking({
 
             if (!res.ok) throw new Error("Failed to create booking");
             const data = await res.json();
-            await attachInvitesToBooking(data.booking_id);
+
+            //send invites for any contributors not yet invited
+            const updatedContributors = await Promise.all(
+                selectedContributors.map(async (user) => {
+                    if (user.invite_id) return user;
+                    const inviteRes = await fetch("/api/booking/contributor/invite", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sent_to: user.id }),
+                    });
+                    if (!inviteRes.ok) return user;
+                    const { invite_id } = await inviteRes.json();
+                    return { ...user, invite_id };
+                })
+            );
+
+            const inviteIds = updatedContributors
+                .map((c) => c.invite_id)
+                .filter((id): id is number => id !== undefined);
+
+            if (inviteIds.length > 0) {
+                await fetch("/api/booking/invite", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ booking_id: data.booking_id, invite_ids: inviteIds }),
+                });
+            }
+
             resetForm();
 
         } catch {
@@ -186,7 +213,6 @@ export default function Booking({
             setSubmitting(false);
         }
     };
-
     const handleFinalise = async () => {
         setSubmitting(true);
         setSubmitError(null);
@@ -370,6 +396,9 @@ export default function Booking({
                                         return [...prev, user];
                                     })}
                                     onRemove={(id) => setSelectedContributors((prev) => prev.filter((c) => c.id !== id))}
+                                    onUpdate={(user) => setSelectedContributors((prev) =>   // 👈 add this
+                                        prev.map((c) => c.id === user.id ? user : c)
+                                    )}
                                 />
                             )}
                         </div>
