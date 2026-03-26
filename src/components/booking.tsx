@@ -120,7 +120,22 @@ export default function Booking({
     const handleDraft = async () => {
         setSubmitting(true);
         setSubmitError(null);
+
         try {
+            let hs_form_path = null;
+
+            if (hsFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append("file", hsFile);
+                const uploadRes = await fetch("/api/booking/upload", {
+                    method: "POST",
+                    body: uploadFormData,
+                });
+                if (!uploadRes.ok) throw new Error("Failed to upload file");
+                const uploadData = await uploadRes.json();
+                hs_form_path = uploadData.url;
+            }
+
             const res = await fetch("/api/booking", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -131,6 +146,7 @@ export default function Booking({
                     start_time: selectedSlot?.startTime,
                     end_time: selectedSlot?.endTime,
                     other_requirement: otherRequirement,
+                    hs_form_path,
                     items: bookingItems.map((item) => ({
                         id: item.id,
                         quantity: item.quantity,
@@ -143,6 +159,7 @@ export default function Booking({
             setIsBooking(false);
             setTitle("");
             setOtherRequirement("");
+            setHsFile(null);
             onSelectedSlotChange(null);
             clearItems();
 
@@ -284,51 +301,60 @@ export default function Booking({
                             {submitError && (
                                 <p className="text-xs text-red-500 text-center">{submitError}</p>
                             )}
-                            <div className="flex flex-row gap-2">
-                                <button
-                                    onClick={() => {
-                                        setIsBooking(false);
-                                        setTitle("");
-                                        setHsFile(null);
-                                        setSubmitError(null);
-                                        setSelectedContributors([]);
-                                        setShowContributorSearch(false);
-                                        onSelectedSlotChange(null);
-                                        clearItems();
-                                    }}
-                                    className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-            rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
-            transition-all cursor-pointer"
-                                >
-                                    Cancel
-                                </button>
 
-                                <button
-                                    onClick={handleDraft}
-                                    disabled={submitting}
-                                    className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-    rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
-    disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                                >
-                                    {submitting ? "Saving..." : "Draft"}
-                                </button>
+                            {submitting ? (
+                                // Loading state replaces all buttons
+                                <div className="flex items-center justify-center gap-2 py-2">
+                                    <svg className="animate-spin w-4 h-4 text-[#B80050]" viewBox="0 0 24 24" fill="none">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                    </svg>
+                                    <p className="text-xs text-gray-400">Saving draft...</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-row gap-2">
+                                    <button
+                                        onClick={() => {
+                                            setIsBooking(false);
+                                            setTitle("");
+                                            setHsFile(null);
+                                            setSubmitError(null);
+                                            setOtherRequirement("");
+                                            onSelectedSlotChange(null);
+                                            clearItems();
+                                        }}
+                                        className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+                transition-all cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
 
-                                <button
-                                    onClick={() => {
-                                        if (!hsFile) {
-                                            setSubmitError("Please attach a H&S form before finalising.");
-                                            return;
-                                        }
-                                        setSubmitError(null);
-                                        // submit function goes here later
-                                    }}
-                                    className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-            rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
-            hover:shadow-md transition-all cursor-pointer"
-                                >
-                                    Finalise
-                                </button>
-                            </div>
+                                    <button
+                                        onClick={handleDraft}
+                                        className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
+                transition-all cursor-pointer"
+                                    >
+                                        Draft
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            if (!hsFile) {
+                                                setSubmitError("Please attach a H&S form before finalising.");
+                                                return;
+                                            }
+                                            setSubmitError(null);
+                                        }}
+                                        className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
+                hover:shadow-md transition-all cursor-pointer"
+                                    >
+                                        Finalise
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

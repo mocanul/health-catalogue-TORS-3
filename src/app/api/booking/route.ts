@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const { lesson, room_name, booking_date, start_time, end_time, other_requirement, items } = body;
+        const { lesson, room_name, booking_date, start_time, end_time, other_requirement, hs_form_path, items } = body;
 
         // Find room by name
         const room = await prisma.room.findFirst({
@@ -32,10 +32,12 @@ export async function POST(req: Request) {
                 room_id: room.id,
                 lesson,
                 other_requirement: other_requirement ?? null,
-                booking_date: new Date(booking_date),
-                start_time: start_time,
-                end_time: end_time,
+                booking_date: new Date(`${booking_date}T00:00:00`),
+                start_time,
+                end_time,
                 status: "DRAFT",
+                updated_at: new Date(),
+                hs_form_path: hs_form_path ?? null,
                 bookingItems: {
                     create: items.map((item: { id: number; quantity: number }) => ({
                         equipment_id: item.id,
