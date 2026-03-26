@@ -24,8 +24,14 @@ model AuditLog {
 
 model Booking {
   id                Int               @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   created_by        Int
   room_id           Int
+  booking_date      DateTime          @db.Date
+  status            BookingStatus     @default(DRAFT)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  lesson            String?           @db.VarChar(255)
   booking_date      DateTime          @db.Date
   status            BookingStatus     @default(DRAFT)
   created_at        DateTime          @default(now())
@@ -232,6 +238,10 @@ enum UserRole {
 
 enum BookingInviteStatus {
   PENDING
-  ACCEPTED
-  REJECTED
+  COMPLETED
+}
+
+enum TaskType {
+  SETUP
+  STRIPDOWN
 }

@@ -1,7 +1,10 @@
+"use server"
+
 import { prisma } from "@/lib/prisma";
 import {validateSession} from "@/lib/auth/session"
 import {cookies} from "next/headers"
 import { redirect } from "next/navigation";
+import ViewBookingButton from "@/components/modals/viewBookingButton";
 
 export default async function Bookings() {
     const cookieStore = await cookies()
@@ -34,6 +37,11 @@ export default async function Bookings() {
                 select:{
                     name: true
                 }
+            },
+            bookingItems:{
+                include:{
+                    equipment: true
+                }
             }
         },
         orderBy:[
@@ -56,7 +64,7 @@ export default async function Bookings() {
 
                     <div className="w-full max-h-120 overflow-x-auto overflow-y-auto">
                         <table className="w-full border">
-                            <thead className="sticky top-0 bg-pink-50 z-10">
+                            <thead className="sticky top-0 bg-pink-50">
                                 <tr className="border-b pb-3">
                                     <th className="p-3 text-center border-gray-200">First Name</th>
                                     <th className="p-3 text-center border-gray-500">Last Name</th>
@@ -66,6 +74,7 @@ export default async function Bookings() {
                                     <th className="p-3 text-center border-gray-500">Start Time</th>
                                     <th className="p-3 text-center border-gray-500">End Time</th>
                                     <th className="p-3 text-center border-gray-500">Status</th>
+                                    <th className="p-3 text-center border-gray-500">Actions</th>
                                 </tr>
                             </thead>
 
@@ -87,6 +96,9 @@ export default async function Bookings() {
                                     </td>
                                     
                                     <td className="p-3 text-center border-gray-500">{item.status}</td>
+                                    <td className="p-3 text-center border-gray-500">
+                                        <ViewBookingButton booking={item} role={user_role} />
+                                    </td>
                                     </tr>
                                 ))}
                             </tbody>
