@@ -8,18 +8,17 @@ datasource db {
 }
 
 model User {
-  id                 Int                   @id @default(autoincrement())
-  first_name         String?               @db.VarChar(255)
-  last_name          String?               @db.VarChar(255)
-  email              String                @unique @db.VarChar(255)
+  id                 Int                  @id @default(autoincrement())
+  first_name         String?              @db.VarChar(255)
+  last_name          String?              @db.VarChar(255)
+  email              String               @unique @db.VarChar(255)
   role               UserRole
-  is_active          Boolean               @default(true)
-  created_at         DateTime              @default(now())
+  is_active          Boolean              @default(true)
+  created_at         DateTime             @default(now())
   passwordHash       String
   auditLogs          AuditLog[]
   bookings           Booking[]
-  sentInvitations    BookingCollaborator[] @relation("InvitedBy")
-  collaborations     BookingCollaborator[]
+  BookingTask        BookingTask[]
   favourites         Favourite[]
   PasswordSetupToken PasswordSetupToken[]
   sessions           Session[]
@@ -41,39 +40,28 @@ model AuditLog {
 }
 
 model Booking {
-  id                Int                   @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   created_by        Int
   room_id           Int
-  booking_date      DateTime              @db.Date
-  status            BookingStatus         @default(DRAFT)
-  created_at        DateTime              @default(now())
-  updated_at        DateTime              @updatedAt
-  lesson            String?               @db.VarChar(255)
+  booking_date      DateTime          @db.Date
+  status            BookingStatus     @default(DRAFT)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime          @updatedAt
+  lesson            String?           @db.VarChar(255)
   other_requirement String?
-  start_time        String                @db.VarChar(5)
-  end_time          String                @db.VarChar(5)
-  user              User                  @relation(fields: [created_by], references: [id])
-  room              Room                  @relation(fields: [room_id], references: [id])
-  collaborators     BookingCollaborator[]
+  start_time        String            @db.VarChar(255)
+  end_time          String            @db.VarChar(255)
+  review_notes      String?
+  hs_form_path      String?
+  user              User              @relation(fields: [created_by], references: [id])
+  room              Room              @relation(fields: [room_id], references: [id])
+  BookingDocument   BookingDocument[]
   bookingItems      BookingItem[]
+  BookingTask       BookingTask[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
-}
-
-model BookingCollaborator {
-  booking_id Int
-  user_id    Int
-  invited_by Int
-  status     CollaboratorStatus @default(PENDING)
-  booking    Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  inviter    User               @relation("InvitedBy", fields: [invited_by], references: [id])
-  user       User               @relation(fields: [user_id], references: [id])
-
-  @@id([booking_id, user_id])
-  @@index([user_id])
-  @@index([invited_by])
 }
 
 model BookingItem {
@@ -120,6 +108,7 @@ model Room {
   created_at DateTime    @default(now())
   side_rooms Int?
   type       String?     @db.VarChar(255)
+  building   String?     @db.VarChar(255)
   bookings   Booking[]
   equipment  Equipment[]
 }
@@ -161,27 +150,31 @@ model PasswordSetupToken {
   @@index([user_id])
 }
 
-model BookingCollaborator {
-  booking_id                                Int
-  user_id                                   Int
-  invited_by                                Int
-  status                                    CollaboratorStatus @default(PENDING)
-  Booking                                   Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  User_BookingCollaborator_invited_byToUser User               @relation("BookingCollaborator_invited_byToUser", fields: [invited_by], references: [id])
-  User_BookingCollaborator_user_idToUser    User               @relation("BookingCollaborator_user_idToUser", fields: [user_id], references: [id])
+model BookingDocument {
+  id            Int                 @id @default(autoincrement())
+  booking_id    Int
+  file_name     String              @db.VarChar(255)
+  file_path     String              @db.VarChar(500)
+  document_type BookingDocumentType
+  created_at    DateTime            @default(now())
+  Booking       Booking             @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
-  @@id([booking_id, user_id])
-  @@index([invited_by])
-  @@index([user_id])
+  @@index([booking_id])
 }
 
-model Favourite {
-  user_id      Int
-  equipment_id Int
-  Equipment    Equipment @relation(fields: [equipment_id], references: [id])
-  User         User      @relation(fields: [user_id], references: [id])
+model BookingTask {
+  id          Int        @id @default(autoincrement())
+  booking_id  Int
+  assigned_to Int
+  task_type   TaskType
+  status      TaskStatus @default(PENDING)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime
+  User        User       @relation(fields: [assigned_to], references: [id])
+  Booking     Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
-  @@id([user_id, equipment_id])
+  @@index([assigned_to])
+  @@index([booking_id])
 }
 
 enum BookingStatus {
@@ -200,8 +193,17 @@ enum UserRole {
   STUDENT
 }
 
-enum CollaboratorStatus {
+enum BookingDocumentType {
+  SAFETY_RISK_ASSESSMENT
+  OTHER
+}
+
+enum TaskStatus {
   PENDING
-  ACCEPTED
-  REJECTED
+  COMPLETED
+}
+
+enum TaskType {
+  SETUP
+  STRIPDOWN
 }
