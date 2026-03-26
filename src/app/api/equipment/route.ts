@@ -8,6 +8,11 @@ export async function GET() {
         const equipment = await prisma.equipment.findMany({
             where: { is_active: true },
             orderBy: { name: "asc" },
+            include: {
+                room: {
+                    select: { name: true },
+                },
+            },
         });
         return NextResponse.json(equipment);
     } catch {

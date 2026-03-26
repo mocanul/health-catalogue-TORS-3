@@ -12,6 +12,7 @@ type Room = {
 type BookingItem = {
     id: number;
     name: string;
+    fixed_room_id: number | null;
     quantity: number;
 };
 
@@ -38,6 +39,7 @@ type Equipment = {
     is_active: boolean;
     created_at: string;
     fixed_room_id: number | null;
+    room: { name: string } | null;
 };
 
 const TABS = [
@@ -142,10 +144,19 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
             return;
         }
 
+        if (item.fixed_room_id !== null) {
+            const fixedRoomName = item.room?.name ?? "a specific room";
+            if (selectedSlot.roomName !== fixedRoomName) {
+                setErrorMessage(`This item can only be used in ${fixedRoomName}. Please select that room to book this item.`);
+                return;
+            }
+        }
+
         onAddItem({
             id: item.id,
             name: item.name,
             quantity: 1,
+            fixed_room_id: item.fixed_room_id,
         });
     };
 
@@ -198,11 +209,12 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                 ) : (
                     <>
                         {/* Header row */}
-                        <div className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 h-10 items-center">
+                        <div className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 h-10 items-center">
                             <div />
-                            <p className="text-xs font-medium text-gray-500">Item</p>
+                            <p className="text-xs font-medium text-gra y-500">Item</p>
                             <p className="text-xs font-medium text-gray-500">Category</p>
                             <p className="text-xs font-medium text-gray-500">Availability</p>
+                            <p className="text-xs font-medium text-gray-500">Fixed room</p>
                             <div />
                         </div>
 
@@ -211,7 +223,7 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                                 filtered.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white h-14"
+                                        className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white h-14"
                                     >
                                         {/* Favourite Star */}
                                         <button
@@ -244,6 +256,14 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                                             {item.quantity_available > 0 ? "Available" : "Unavailable"}
                                         </span>
 
+                                        {/* Fixed Room */}
+                                        {item.room ? (
+                                            <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full truncate w-fit">
+                                                {item.room.name}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-gray-300">Any room</span>
+                                        )}
                                         {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
                                         <div className="w-42.5 flex justify-end">
                                             {isBooking ? (

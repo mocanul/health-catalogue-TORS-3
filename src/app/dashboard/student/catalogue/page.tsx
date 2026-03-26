@@ -15,6 +15,7 @@ type BookingItem = {
   id: number;
   name: string;
   quantity: number;
+  fixed_room_id: number | null;
 };
 
 type SelectedBookingSlot = {
@@ -31,13 +32,12 @@ export default function CataloguePage() {
   const [selectedSlot, setSelectedSlot] = useState<SelectedBookingSlot | null>(null);
   const [isBooking, setIsBooking] = useState(false);
 
+  //add item to booking
   const handleAddItem = (item: BookingItem) => {
     setBookingItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
-        return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
+        return prev.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
       return [...prev, item];
     });
@@ -50,6 +50,14 @@ export default function CataloguePage() {
 
   //when canceling booking, clear selected items
   const handleClearItems = () => setBookingItems([]);
+
+  //if room has been changed in timetable, remove fixed_room items in database
+  const handleSelectedSlotChange = (slot: SelectedBookingSlot | null) => {
+    if (slot && selectedSlot && slot.roomName !== selectedSlot.roomName) {
+      setBookingItems((prev) => prev.filter((item) => item.fixed_room_id === null));
+    }
+    setSelectedSlot(slot);
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -74,7 +82,7 @@ export default function CataloguePage() {
           onRemoveItem={handleRemoveItem}
           clearItems={handleClearItems}
           selectedSlot={selectedSlot}
-          onSelectedSlotChange={setSelectedSlot}
+          onSelectedSlotChange={handleSelectedSlotChange}
           isBooking={isBooking}
           setIsBooking={setIsBooking}
         />
