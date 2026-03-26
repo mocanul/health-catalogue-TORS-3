@@ -101,6 +101,43 @@ export default function Booking({
         fetchData();
     }, []);
 
+    const getInviteIds = () =>
+        selectedContributors
+            .map((c) => c.invite_id)
+            .filter((id): id is number => id !== undefined);
+
+    const attachInvitesToBooking = async (booking_id: number) => {
+        const inviteIds = getInviteIds();
+        if (inviteIds.length === 0) return;
+        await fetch("/api/booking/invite", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_id, invite_ids: inviteIds }),
+        });
+    };
+
+    const deleteInvites = async () => {
+        const inviteIds = getInviteIds();
+        if (inviteIds.length === 0) return;
+        await fetch(`/api/booking/invite?ids=${inviteIds.join(",")}`, {
+            method: "DELETE",
+        });
+    };
+
+    const resetForm = () => {
+        setIsBooking(false);
+        setTitle("");
+        setOtherRequirement("");
+        setHsFile(null);
+        setSubmitError(null);
+        setShowCancelConfirm(false);
+        setShowFinaliseConfirm(false);
+        setSelectedContributors([]);
+        setShowContributorSearch(false);
+        onSelectedSlotChange(null);
+        clearItems();
+    };
+
     const handleDraft = async () => {
         setSubmitting(true);
         setSubmitError(null);
@@ -139,13 +176,9 @@ export default function Booking({
             });
 
             if (!res.ok) throw new Error("Failed to create booking");
-
-            setIsBooking(false);
-            setTitle("");
-            setOtherRequirement("");
-            setHsFile(null);
-            onSelectedSlotChange(null);
-            clearItems();
+            const data = await res.json();
+            await attachInvitesToBooking(data.booking_id);
+            resetForm();
 
         } catch {
             setSubmitError("Something went wrong. Please try again.");
@@ -193,14 +226,9 @@ export default function Booking({
             });
 
             if (!res.ok) throw new Error("Failed to create booking");
-
-            setIsBooking(false);
-            setTitle("");
-            setOtherRequirement("");
-            setHsFile(null);
-            setShowFinaliseConfirm(false);
-            onSelectedSlotChange(null);
-            clearItems();
+            const data = await res.json();
+            await attachInvitesToBooking(data.booking_id);
+            resetForm();
 
         } catch {
             setSubmitError("Something went wrong. Please try again.");
@@ -308,24 +336,23 @@ export default function Booking({
                                 <button
                                     onClick={() => hsInputRef.current?.click()}
                                     className={`flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
-            rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
-            ${hsFile
+                                    rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
+                                    ${hsFile
                                             ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
                                             : "bg-[#B80050] hover:bg-[#9a0044] text-white"
                                         }`}
                                 >
-                                    {hsFile ? ` ${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
+                                    {hsFile ? `${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
                                 </button>
 
                                 <button
                                     onClick={() => setShowContributorSearch((prev) => !prev)}
                                     className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
-    rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
-    bg-[#B80050] hover:bg-[#9a0044] text-white"
+                                    rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
+                                    bg-[#B80050] hover:bg-[#9a0044] text-white"
                                 >
                                     Invite Contributor
                                 </button>
-
                             </div>
 
                             <a href="/forms/HSform.docx"
@@ -333,6 +360,7 @@ export default function Booking({
                                 className="text-xs text-blue-500 hover:underline cursor-pointer w-fit -mt-2">
                                 Download H&S Form
                             </a>
+
 
                             {showContributorSearch && (
                                 <ContributorSearch
@@ -352,7 +380,6 @@ export default function Booking({
                             )}
 
                             {submitting ? (
-                                //loading state replacing all buttons
                                 <div className="flex items-center justify-center gap-2 py-2">
                                     <svg className="animate-spin w-4 h-4 text-[#B80050]" viewBox="0 0 24 24" fill="none">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -361,9 +388,6 @@ export default function Booking({
                                     <p className="text-xs text-gray-400">Loading...</p>
                                 </div>
 
-
-
-                                //show confirmation message for when cancelling booking
                             ) : showCancelConfirm ? (
                                 <div className="flex flex-col gap-2 w-full">
                                     <p className="text-xs text-gray-500 text-center">Are you sure? Your booking will be lost.</p>
@@ -371,25 +395,19 @@ export default function Booking({
                                         <button
                                             onClick={() => setShowCancelConfirm(false)}
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
-                transition-all cursor-pointer"
+                                            rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+                                            transition-all cursor-pointer"
                                         >
                                             Go back
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                setIsBooking(false);
-                                                setTitle("");
-                                                setHsFile(null);
-                                                setSubmitError(null);
-                                                setOtherRequirement("");
-                                                setShowCancelConfirm(false);
-                                                onSelectedSlotChange(null);
-                                                clearItems();
+                                            onClick={async () => {
+                                                await deleteInvites();
+                                                resetForm();
                                             }}
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg bg-red-500 hover:bg-red-600 text-white
-                transition-all cursor-pointer"
+                                            rounded-lg bg-red-500 hover:bg-red-600 text-white
+                                            transition-all cursor-pointer"
                                         >
                                             Yes, cancel
                                         </button>
@@ -403,28 +421,29 @@ export default function Booking({
                                         <button
                                             onClick={() => setShowFinaliseConfirm(false)}
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
-                transition-all cursor-pointer"
+                                            rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+                                            transition-all cursor-pointer"
                                         >
                                             Go back
                                         </button>
                                         <button
                                             onClick={handleFinalise}
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white
-                transition-all cursor-pointer"
+                                            rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white
+                                            transition-all cursor-pointer"
                                         >
                                             Yes, submit
                                         </button>
                                     </div>
                                 </div>
+
                             ) : (
                                 <div className="flex flex-row gap-2">
                                     <button
                                         onClick={() => setShowCancelConfirm(true)}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-            rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
-            transition-all cursor-pointer"
+                                        rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+                                        transition-all cursor-pointer"
                                     >
                                         Cancel
                                     </button>
@@ -432,8 +451,8 @@ export default function Booking({
                                     <button
                                         onClick={handleDraft}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-            rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
-            transition-all cursor-pointer"
+                                        rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
+                                        transition-all cursor-pointer"
                                     >
                                         Draft
                                     </button>
@@ -456,8 +475,8 @@ export default function Booking({
                                             setShowFinaliseConfirm(true);
                                         }}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-            rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
-            hover:shadow-md transition-all cursor-pointer"
+                                        rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
+                                        hover:shadow-md transition-all cursor-pointer"
                                     >
                                         Submit
                                     </button>

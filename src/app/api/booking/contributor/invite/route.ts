@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/auth/session";
 
-//get user Id
 async function getUser() {
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
@@ -11,7 +10,7 @@ async function getUser() {
     return validateSession(token);
 }
 
-// create invite without the booking ID
+//create invite without booking id
 export async function POST(req: Request) {
     const user = await getUser();
     if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
@@ -29,7 +28,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ invite_id: invite.id });
 }
 
-//attach pending invite to booking_id
+//attach booking id to invites
 export async function PATCH(req: Request) {
     const user = await getUser();
     if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
@@ -48,12 +47,13 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ success: true });
 }
 
-//delete pending invites without the booking id
+//delete pending invites if no booking id exists
 export async function DELETE(req: Request) {
     const user = await getUser();
     if (!user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
-    const { invite_ids } = await req.json();
+    const { searchParams } = new URL(req.url);
+    const invite_ids = searchParams.get("ids")?.split(",").map(Number) ?? [];
 
     await prisma.bookingInvite.deleteMany({
         where: {

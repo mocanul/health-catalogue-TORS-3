@@ -43,7 +43,7 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
         if (selectedContributors.find((c) => c.id === user.id)) return;
 
         try {
-            const res = await fetch("/api/booking/invite", {
+            const res = await fetch("/api/booking/contributor/invite", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sent_to: user.id }),
@@ -51,12 +51,11 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
             if (!res.ok) throw new Error();
             const { invite_id } = await res.json();
             onAdd({ ...user, invite_id });
+            setContributorSearch("");
+            setContributorResults([]);
         } catch {
-            onAdd(user);
+            console.error("Failed to create invite");
         }
-
-        setContributorSearch("");
-        setContributorResults([]);
     };
 
     return (
@@ -101,6 +100,7 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
                                 contributorResults.map((user) => (
                                     <button
                                         key={user.id}
+                                        type="button"
                                         onClick={() => handleInvite(user)}
                                         className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-pink-50 hover:text-pink-700 transition-colors cursor-pointer"
                                     >
