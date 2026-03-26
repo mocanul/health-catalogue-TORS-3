@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/auth/session";
 
+//get user ID
 async function getUser() {
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
@@ -18,13 +19,14 @@ export async function POST(req: Request) {
         const body = await req.json();
 
         const { lesson, room_name, booking_date, start_time, end_time, other_requirement, hs_form_path, items, status } = body;
-        // Find room by name
+
+        //find room by name
         const room = await prisma.room.findFirst({
             where: { name: room_name },
         });
         if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 });
 
-        // Create booking
+        //create booking
         const booking = await prisma.booking.create({
             data: {
                 created_by: user.id,

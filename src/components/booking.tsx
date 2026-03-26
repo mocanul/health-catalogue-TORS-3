@@ -36,6 +36,7 @@ type Contributor = {
     id: number;
     first_name: string;
     last_name: string;
+    invite_id?: number;
 };
 
 type Props = {
@@ -336,7 +337,10 @@ export default function Booking({
                             {showContributorSearch && (
                                 <ContributorSearch
                                     selectedContributors={selectedContributors}
-                                    onAdd={(user) => setSelectedContributors((prev) => [...prev, user])}
+                                    onAdd={(user) => setSelectedContributors((prev) => {
+                                        if (prev.find((c) => c.id === user.id)) return prev;
+                                        return [...prev, user];
+                                    })}
                                     onRemove={(id) => setSelectedContributors((prev) => prev.filter((c) => c.id !== id))}
                                 />
                             )}

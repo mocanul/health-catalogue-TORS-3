@@ -6,6 +6,7 @@ type Contributor = {
     id: number;
     first_name: string;
     last_name: string;
+    invite_id?: number;
 };
 
 type Props = {
@@ -27,7 +28,7 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
         }
         setSearching(true);
         try {
-            const res = await fetch(`/api/booking/contributor?q=${encodeURIComponent(query)}`);
+            const res = await fetch(`/api/booking/contributor/search?q=${encodeURIComponent(query)}`);
             if (!res.ok) throw new Error();
             const data = await res.json();
             setContributorResults(data);
@@ -36,16 +37,24 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
         } finally {
             setSearching(false);
         }
-
-        const res = await fetch(`/api/booking/contributor?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        setContributorResults(data);
     };
 
-    const handleAdd = (user: Contributor) => {
+    const handleInvite = async (user: Contributor) => {
         if (selectedContributors.find((c) => c.id === user.id)) return;
-        onAdd(user);
+
+        try {
+            const res = await fetch("/api/booking/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sent_to: user.id }),
+            });
+            if (!res.ok) throw new Error();
+            const { invite_id } = await res.json();
+            onAdd({ ...user, invite_id });
+        } catch {
+            onAdd(user);
+        }
+
         setContributorSearch("");
         setContributorResults([]);
     };
@@ -73,8 +82,8 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
                 </div>
             )}
 
-            {/* Search input */}
-            <div className="relative flex items-center gap-2">
+            {/* Search input + invite button */}
+            <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                     <input
                         type="text"
@@ -84,7 +93,6 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
                         className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
                     />
 
-                    {/* Results dropdown */}
                     {(contributorResults.length > 0 || searching) && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-36 overflow-y-auto">
                             {searching ? (
@@ -93,7 +101,7 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
                                 contributorResults.map((user) => (
                                     <button
                                         key={user.id}
-                                        onClick={() => handleAdd(user)}
+                                        onClick={() => handleInvite(user)}
                                         className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-pink-50 hover:text-pink-700 transition-colors cursor-pointer"
                                     >
                                         {user.first_name} {user.last_name}
@@ -103,6 +111,19 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
                         </div>
                     )}
                 </div>
+
+                <button
+                    onClick={() => {
+                        if (contributorResults.length > 0) {
+                            handleInvite(contributorResults[0]);
+                        }
+                    }}
+                    disabled={contributorResults.length === 0}
+                    className="shrink-0 bg-[#B80050] hover:bg-[#9a0044] disabled:opacity-40 disabled:cursor-not-allowed
+                    text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                >
+                    Invite
+                </button>
             </div>
         </div>
     );

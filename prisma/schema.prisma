@@ -41,10 +41,29 @@ model Booking {
   bookingDocuments  BookingDocument[]
   bookingItems      BookingItem[]
   bookingTasks      BookingTask[]
+  invites           BookingInvite[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
+}
+
+model BookingInvite {
+  id          Int                 @id @default(autoincrement())
+  booking_id  Int?
+  sent_by     Int
+  sent_to     Int
+  status      BookingInviteStatus @default(PENDING)
+  sent_at     DateTime            @default(now())
+  accepted_at DateTime?
+
+  booking  Booking? @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  sender   User    @relation("InviteSender", fields: [sent_by], references: [id])
+  receiver User    @relation("InviteReceiver", fields: [sent_to], references: [id])
+
+  @@index([booking_id])
+  @@index([sent_by])
+  @@index([sent_to])
 }
 
 model BookingDocument {
@@ -175,6 +194,9 @@ model User {
   favourites          Favourite[]
   passwordSetupTokens PasswordSetupToken[]
   sessions            Session[]
+
+  sentInvites     BookingInvite[] @relation("InviteSender")
+  receivedInvites BookingInvite[] @relation("InviteReceiver")
 }
 
 enum BookingDocumentType {
@@ -206,4 +228,10 @@ enum UserRole {
   TECHNICIAN
   STAFF
   STUDENT
+}
+
+enum BookingInviteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
