@@ -18,9 +18,10 @@ model User {
   passwordHash       String
   auditLogs          AuditLog[]
   bookings           Booking[]
+  assignedTasks      BookingTask[]        @relation("TaskAssignee")
+  favourites         Favourite[]
   PasswordSetupToken PasswordSetupToken[]
   sessions           Session[]
-  favourites         Favourite[]
 }
 
 model AuditLog {
@@ -39,23 +40,55 @@ model AuditLog {
 }
 
 model Booking {
-  id           Int           @id @default(autoincrement())
+  id           Int               @id @default(autoincrement())
   created_by   Int
   room_id      Int
-  description  String?
-  booking_date DateTime      @db.Date
-  start_time   DateTime      @db.Time(6)
-  end_time     DateTime      @db.Time(6)
-  status       BookingStatus @default(DRAFT)
-  created_at   DateTime      @default(now())
+  booking_date DateTime          @db.Date
+  status       BookingStatus     @default(DRAFT)
+  created_at   DateTime          @default(now())
   updated_at   DateTime
-  user         User          @relation(fields: [created_by], references: [id])
-  room         Room          @relation(fields: [room_id], references: [id])
+  lesson       String?           @db.VarChar(255)
+  description  String?           @map("other_requirement")
+  start_time   String            @db.VarChar(255)
+  end_time     String            @db.VarChar(255)
+  review_notes String?
+  hs_form_path String?
+  user         User              @relation(fields: [created_by], references: [id])
+  room         Room              @relation(fields: [room_id], references: [id])
+  documents    BookingDocument[]
   bookingItems BookingItem[]
+  tasks        BookingTask[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
+}
+
+model BookingDocument {
+  id            Int                 @id @default(autoincrement())
+  booking_id    Int
+  file_name     String              @db.VarChar(255)
+  file_path     String              @db.VarChar(500)
+  document_type BookingDocumentType
+  created_at    DateTime            @default(now())
+  booking       Booking             @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+  @@index([booking_id])
+}
+
+model BookingTask {
+  id          Int        @id @default(autoincrement())
+  booking_id  Int
+  assigned_to Int
+  task_type   TaskType
+  status      TaskStatus @default(PENDING)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime
+  assignee    User       @relation("TaskAssignee", fields: [assigned_to], references: [id])
+  booking     Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+  @@index([booking_id])
+  @@index([assigned_to])
 }
 
 model BookingItem {
@@ -90,9 +123,8 @@ model Equipment {
 model Favourite {
   user_id      Int
   equipment_id Int
-
-  user      User      @relation(fields: [user_id], references: [id])
-  equipment Equipment @relation(fields: [equipment_id], references: [id])
+  equipment    Equipment @relation(fields: [equipment_id], references: [id])
+  user         User      @relation(fields: [user_id], references: [id])
 
   @@id([user_id, equipment_id])
 }
@@ -100,8 +132,10 @@ model Favourite {
 model Room {
   id         Int         @id @default(autoincrement())
   name       String      @db.VarChar(255)
-  building   String?     @db.VarChar(255)
   created_at DateTime    @default(now())
+  side_rooms Int?
+  type       String?     @db.VarChar(255)
+  building   String?     @db.VarChar(255)
   bookings   Booking[]
   equipment  Equipment[]
 }
@@ -157,4 +191,19 @@ enum UserRole {
   TECHNICIAN
   STAFF
   STUDENT
+}
+
+enum BookingDocumentType {
+  SAFETY_RISK_ASSESSMENT
+  OTHER
+}
+
+enum TaskType {
+  SETUP
+  STRIPDOWN
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
 }
