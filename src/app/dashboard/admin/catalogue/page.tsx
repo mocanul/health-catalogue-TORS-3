@@ -9,6 +9,7 @@ export default function Home() {
       <div className="flex min-h-screen flex-col">
         <Navbar showLogout={true} links={[
           {href: "/dashboard/admin", label: "Activity"},
+          {href: "/dashboard/admin/bookings", label: "Bookings"},
           {href: "/dashboard/admin/catalogue", label: "Order Catalogue", primary: true},
           {href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue"},
           {href: "/dashboard/admin/users", label: "Users"}

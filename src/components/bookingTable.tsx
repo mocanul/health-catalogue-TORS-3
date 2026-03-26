@@ -80,10 +80,10 @@ export default async function Bookings() {
                                         {item.booking_date.toDateString()}
                                     </td>
                                     <td className="p-3 text-center border-gray-500">
-                                        {item.start_time.toISOString().slice(11, 16)}
+                                        {item.start_time.toString()}
                                     </td>
                                     <td className="p-3 text-center border-gray-500">
-                                        {item.end_time.toISOString().slice(11, 16)}
+                                        {item.end_time.toString()}
                                     </td>
                                     
                                     <td className="p-3 text-center border-gray-500">{item.status}</td>

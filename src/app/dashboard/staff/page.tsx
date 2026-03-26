@@ -5,6 +5,8 @@ export default function StaffDashboard() {
     return (
         <div className="flex min-h-screen flex-col">
             <Navbar showLogout={true} links={[
+                {href: "/dashboard/staff", label: "Home", primary: true},
+                {href: "/dashboard/staff/bookings", label: "Bookings"}
             ]}/>
 
             <main className="min-h-screen flex items-center justify-center bg-gray-100">

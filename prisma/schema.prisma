@@ -45,13 +45,13 @@ model Booking {
   created_by          Int
   room_id             Int
   booking_date        DateTime              @db.Date
-  start_time          DateTime              @db.Time(6)
-  end_time            DateTime              @db.Time(6)
   status              BookingStatus         @default(DRAFT)
   created_at          DateTime              @default(now())
   updated_at          DateTime              @updatedAt
   lesson              String?               @db.VarChar(255)
   other_requirement   String?
+  start_time          String                @db.VarChar(5)
+  end_time            String                @db.VarChar(5)
   user                User                  @relation(fields: [created_by], references: [id])
   room                Room                  @relation(fields: [room_id], references: [id])
   BookingCollaborator BookingCollaborator[]
