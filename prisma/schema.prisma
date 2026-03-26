@@ -8,19 +8,21 @@ datasource db {
 }
 
 model User {
-  id                 Int                  @id @default(autoincrement())
-  first_name         String?              @db.VarChar(255)
-  last_name          String?              @db.VarChar(255)
-  email              String               @unique @db.VarChar(255)
-  role               UserRole
-  is_active          Boolean              @default(true)
-  created_at         DateTime             @default(now())
-  passwordHash       String
-  auditLogs          AuditLog[]
-  bookings           Booking[]
-  PasswordSetupToken PasswordSetupToken[]
-  sessions           Session[]
-  favourites         Favourite[]
+  id                                                       Int                   @id @default(autoincrement())
+  first_name                                               String?               @db.VarChar(255)
+  last_name                                                String?               @db.VarChar(255)
+  email                                                    String                @unique @db.VarChar(255)
+  role                                                     UserRole
+  is_active                                                Boolean               @default(true)
+  created_at                                               DateTime              @default(now())
+  passwordHash                                             String
+  auditLogs                                                AuditLog[]
+  bookings                                                 Booking[]
+  BookingCollaborator_BookingCollaborator_invited_byToUser BookingCollaborator[] @relation("BookingCollaborator_invited_byToUser")
+  BookingCollaborator_BookingCollaborator_user_idToUser    BookingCollaborator[] @relation("BookingCollaborator_user_idToUser")
+  Favourite                                                Favourite[]
+  PasswordSetupToken                                       PasswordSetupToken[]
+  sessions                                                 Session[]
 }
 
 model AuditLog {
@@ -39,19 +41,21 @@ model AuditLog {
 }
 
 model Booking {
-  id           Int           @id @default(autoincrement())
-  created_by   Int
-  room_id      Int
-  description  String?
-  booking_date DateTime      @db.Date
-  start_time   DateTime      @db.Time(6)
-  end_time     DateTime      @db.Time(6)
-  status       BookingStatus @default(DRAFT)
-  created_at   DateTime      @default(now())
-  updated_at   DateTime
-  user         User          @relation(fields: [created_by], references: [id])
-  room         Room          @relation(fields: [room_id], references: [id])
-  bookingItems BookingItem[]
+  id                  Int                   @id @default(autoincrement())
+  created_by          Int
+  room_id             Int
+  booking_date        DateTime              @db.Date
+  status              BookingStatus         @default(DRAFT)
+  created_at          DateTime              @default(now())
+  updated_at          DateTime              @updatedAt
+  lesson              String?               @db.VarChar(255)
+  other_requirement   String?
+  start_time          String                @db.VarChar(5)
+  end_time            String                @db.VarChar(5)
+  user                User                  @relation(fields: [created_by], references: [id])
+  room                Room                  @relation(fields: [room_id], references: [id])
+  BookingCollaborator BookingCollaborator[]
+  bookingItems        BookingItem[]
 
   @@index([booking_date])
   @@index([created_by])
@@ -82,7 +86,7 @@ model Equipment {
   created_at         DateTime      @default(now())
   bookingItems       BookingItem[]
   room               Room?         @relation(fields: [fixed_room_id], references: [id])
-  favourites         Favourite[]
+  Favourite          Favourite[]
 
   @@index([fixed_room_id])
 }
@@ -100,8 +104,9 @@ model Favourite {
 model Room {
   id         Int         @id @default(autoincrement())
   name       String      @db.VarChar(255)
-  building   String?     @db.VarChar(255)
   created_at DateTime    @default(now())
+  side_rooms Int?
+  type       String?     @db.VarChar(255)
   bookings   Booking[]
   equipment  Equipment[]
 }
@@ -143,6 +148,29 @@ model PasswordSetupToken {
   @@index([user_id])
 }
 
+model BookingCollaborator {
+  booking_id                                Int
+  user_id                                   Int
+  invited_by                                Int
+  status                                    CollaboratorStatus @default(PENDING)
+  Booking                                   Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  User_BookingCollaborator_invited_byToUser User               @relation("BookingCollaborator_invited_byToUser", fields: [invited_by], references: [id])
+  User_BookingCollaborator_user_idToUser    User               @relation("BookingCollaborator_user_idToUser", fields: [user_id], references: [id])
+
+  @@id([booking_id, user_id])
+  @@index([invited_by])
+  @@index([user_id])
+}
+
+model Favourite {
+  user_id      Int
+  equipment_id Int
+  Equipment    Equipment @relation(fields: [equipment_id], references: [id])
+  User         User      @relation(fields: [user_id], references: [id])
+
+  @@id([user_id, equipment_id])
+}
+
 enum BookingStatus {
   DRAFT
   SUBMITTED
@@ -157,4 +185,10 @@ enum UserRole {
   TECHNICIAN
   STAFF
   STUDENT
+}
+
+enum CollaboratorStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }

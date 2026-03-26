@@ -60,4 +60,3 @@ export async function validateSession(token: string) {
     //return user
     return session.user
 }
-

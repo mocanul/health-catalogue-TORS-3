@@ -5,8 +5,9 @@ export default function StudentDashboard() {
     return (
         <div className="flex min-h-screen flex-col">
             <Navbar showLogout={true} links={[
-                { href: "/dashboard/student", label: "Home", primary: true },
-                { href: "/dashboard/student/catalogue", label: "Catalogue" }
+                {href: "/dashboard/student", label: "Home", primary: true},
+                {href: "/dashboard/student/bookings", label: "Bookings"},
+                {href: "/dashboard/student/catalogue", label: "Catalogue"}
             ]} />
 
             <main className="min-h-screen flex items-center justify-center bg-gray-100">
