@@ -7,24 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id                 Int                   @id @default(autoincrement())
-  first_name         String?               @db.VarChar(255)
-  last_name          String?               @db.VarChar(255)
-  email              String                @unique @db.VarChar(255)
-  role               UserRole
-  is_active          Boolean               @default(true)
-  created_at         DateTime              @default(now())
-  passwordHash       String
-  auditLogs          AuditLog[]
-  bookings           Booking[]
-  sentInvitations    BookingCollaborator[] @relation("InvitedBy")
-  collaborations     BookingCollaborator[]
-  favourites         Favourite[]
-  PasswordSetupToken PasswordSetupToken[]
-  sessions           Session[]
-}
-
 model AuditLog {
   id           Int      @id @default(autoincrement())
   entity_type  String   @db.VarChar(100)
@@ -41,39 +23,39 @@ model AuditLog {
 }
 
 model Booking {
-  id                Int                   @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   created_by        Int
   room_id           Int
-  booking_date      DateTime              @db.Date
-  status            BookingStatus         @default(DRAFT)
-  created_at        DateTime              @default(now())
-  updated_at        DateTime              @updatedAt
-  lesson            String?               @db.VarChar(255)
+  booking_date      DateTime          @db.Date
+  status            BookingStatus     @default(DRAFT)
+  created_at        DateTime          @default(now())
+  updated_at        DateTime
+  lesson            String?           @db.VarChar(255)
   other_requirement String?
-  start_time        String                @db.VarChar(5)
-  end_time          String                @db.VarChar(5)
-  user              User                  @relation(fields: [created_by], references: [id])
-  room              Room                  @relation(fields: [room_id], references: [id])
-  collaborators     BookingCollaborator[]
+  start_time        String            @db.VarChar(255)
+  end_time          String            @db.VarChar(255)
+  review_notes      String?
+  user              User              @relation(fields: [created_by], references: [id])
+  room              Room              @relation(fields: [room_id], references: [id])
+  bookingDocuments  BookingDocument[]
   bookingItems      BookingItem[]
+  bookingTasks      BookingTask[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
 }
 
-model BookingCollaborator {
-  booking_id Int
-  user_id    Int
-  invited_by Int
-  status     CollaboratorStatus @default(PENDING)
-  booking    Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  inviter    User               @relation("InvitedBy", fields: [invited_by], references: [id])
-  user       User               @relation(fields: [user_id], references: [id])
+model BookingDocument {
+  id            Int                 @id @default(autoincrement())
+  booking_id    Int
+  file_name     String              @db.VarChar(255)
+  file_path     String              @db.VarChar(500)
+  document_type BookingDocumentType
+  created_at    DateTime            @default(now())
+  booking       Booking             @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
-  @@id([booking_id, user_id])
-  @@index([user_id])
-  @@index([invited_by])
+  @@index([booking_id])
 }
 
 model BookingItem {
@@ -89,6 +71,21 @@ model BookingItem {
   @@index([equipment_id])
 }
 
+model BookingTask {
+  id          Int        @id @default(autoincrement())
+  booking_id  Int
+  assigned_to Int
+  task_type   TaskType
+  status      TaskStatus @default(PENDING)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime
+  user        User       @relation(fields: [assigned_to], references: [id])
+  booking     Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+  @@index([assigned_to])
+  @@index([booking_id])
+}
+
 model Equipment {
   id                 Int           @id @default(autoincrement())
   name               String        @db.VarChar(255)
@@ -100,7 +97,7 @@ model Equipment {
   created_at         DateTime      @default(now())
   bookingItems       BookingItem[]
   room               Room?         @relation(fields: [fixed_room_id], references: [id])
-  Favourite          Favourite[]
+  favourites         Favourite[]
 
   @@index([fixed_room_id])
 }
@@ -114,16 +111,6 @@ model Favourite {
   @@id([user_id, equipment_id])
 }
 
-model Room {
-  id         Int         @id @default(autoincrement())
-  name       String      @db.VarChar(255)
-  created_at DateTime    @default(now())
-  side_rooms Int?
-  type       String?     @db.VarChar(255)
-  bookings   Booking[]
-  equipment  Equipment[]
-}
-
 model LoginAttempt {
   id           Int      @id @default(autoincrement())
   attempted_at DateTime @default(now()) @db.Timestamptz(6)
@@ -133,6 +120,30 @@ model LoginAttempt {
 
   @@index([email, attempted_at(sort: Desc)])
   @@index([ip_address, attempted_at(sort: Desc)])
+}
+
+model PasswordSetupToken {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([expires_at])
+  @@index([user_id])
+}
+
+model Room {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(255)
+  created_at DateTime    @default(now())
+  side_rooms Int?
+  type       String?     @db.VarChar(255)
+  building   String?     @db.VarChar(255)
+  bookings   Booking[]
+  equipment  Equipment[]
 }
 
 model Session {
@@ -148,40 +159,26 @@ model Session {
   @@index([user_id])
 }
 
-model PasswordSetupToken {
-  id         Int       @id @default(autoincrement())
-  user_id    Int
-  token_hash String    @unique
-  expires_at DateTime
-  used_at    DateTime?
-  created_at DateTime  @default(now())
-  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@index([expires_at])
-  @@index([user_id])
+model User {
+  id                  Int                  @id @default(autoincrement())
+  first_name          String?              @db.VarChar(255)
+  last_name           String?              @db.VarChar(255)
+  email               String               @unique @db.VarChar(255)
+  role                UserRole
+  is_active           Boolean              @default(true)
+  created_at          DateTime             @default(now())
+  passwordHash        String
+  auditLogs           AuditLog[]
+  bookings            Booking[]
+  bookingTasks        BookingTask[]
+  favourites          Favourite[]
+  passwordSetupTokens PasswordSetupToken[]
+  sessions            Session[]
 }
 
-model BookingCollaborator {
-  booking_id                                Int
-  user_id                                   Int
-  invited_by                                Int
-  status                                    CollaboratorStatus @default(PENDING)
-  Booking                                   Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  User_BookingCollaborator_invited_byToUser User               @relation("BookingCollaborator_invited_byToUser", fields: [invited_by], references: [id])
-  User_BookingCollaborator_user_idToUser    User               @relation("BookingCollaborator_user_idToUser", fields: [user_id], references: [id])
-
-  @@id([booking_id, user_id])
-  @@index([invited_by])
-  @@index([user_id])
-}
-
-model Favourite {
-  user_id      Int
-  equipment_id Int
-  Equipment    Equipment @relation(fields: [equipment_id], references: [id])
-  User         User      @relation(fields: [user_id], references: [id])
-
-  @@id([user_id, equipment_id])
+enum BookingDocumentType {
+  SAFETY_RISK_ASSESSMENT
+  OTHER
 }
 
 enum BookingStatus {
@@ -193,15 +190,19 @@ enum BookingStatus {
   COMPLETED
 }
 
+enum TaskStatus {
+  PENDING
+  COMPLETED
+}
+
+enum TaskType {
+  SETUP
+  STRIPDOWN
+}
+
 enum UserRole {
   ADMIN
   TECHNICIAN
   STAFF
   STUDENT
-}
-
-enum CollaboratorStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
 }
