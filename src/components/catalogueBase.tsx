@@ -1,6 +1,33 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ErrorModal from "./modals/errorMessage";
+
+type Room = {
+    id: number;
+    name: string;
+    type: string | null;
+};
+
+type BookingItem = {
+    id: number;
+    name: string;
+    quantity: number;
+};
+
+type SelectedBookingSlot = {
+    bookingDate: string;
+    roomName: string;
+    startTime: string;
+    endTime: string;
+};
+
+type Props = {
+    selectedRoom: Room | null;
+    selectedSlot: SelectedBookingSlot | null;
+    isBooking: boolean;
+    onAddItem: (item: BookingItem) => void;
+};
 
 type Equipment = {
     id: number;
@@ -31,10 +58,11 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Favourites": [],
 };
 
-export default function Catalogue() {
+export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<string>("General Equipment");
     const [search, setSearch] = useState("");
     const [favourites, setFavourites] = useState<Set<number>>(new Set());
@@ -101,9 +129,29 @@ export default function Catalogue() {
         }
     };
 
+    const handleAddClick = (item: Equipment) => {
+        const hasBookingSlot =
+            selectedSlot &&
+            selectedSlot.roomName &&
+            selectedSlot.bookingDate &&
+            selectedSlot.startTime &&
+            selectedSlot.endTime;
+
+        if (!hasBookingSlot) {
+            setErrorMessage("Please select room, date and time before adding items to booking.");
+            return;
+        }
+
+        onAddItem({
+            id: item.id,
+            name: item.name,
+            quantity: 1,
+        });
+    };
+
     return (
-        <div className="flex justify-center px-6 py-8">
-            <div className="w-full max-w-6xl bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        <div className="flex justify-center px-6 py-8 w-[75%]">
+            <div className="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
 
                 {/* Tab Bar */}
                 <div className="border-b border-gray-200 px-4 flex items-center justify-between">
@@ -150,8 +198,7 @@ export default function Catalogue() {
                 ) : (
                     <>
                         {/* Header row */}
-                        <div className="grid grid-cols-[2rem_3.5rem_2fr_1fr_1fr_1fr] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50">
-                            <div />
+                        <div className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 h-10 items-center">
                             <div />
                             <p className="text-xs font-medium text-gray-500">Item</p>
                             <p className="text-xs font-medium text-gray-500">Category</p>
@@ -159,12 +206,12 @@ export default function Catalogue() {
                             <div />
                         </div>
 
-                        <div className="divide-y divide-gray-100 max-h-130 overflow-y-auto">
+                        <div className="divide-y divide-gray-100 max-h-170 overflow-y-auto">
                             {filtered.length > 0 ? (
                                 filtered.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="grid grid-cols-[2rem_3.5rem_2fr_1fr_1fr_1fr] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white"
+                                        className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white h-14"
                                     >
                                         {/* Favourite Star */}
                                         <button
@@ -180,13 +227,6 @@ export default function Catalogue() {
                                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                             </svg>
                                         </button>
-
-                                        {/* Image */}
-                                        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
-                                            <svg className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                            </svg>
-                                        </div>
 
                                         {/* Name */}
                                         <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
@@ -205,9 +245,18 @@ export default function Catalogue() {
                                         </span>
 
                                         {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
-                                        <button className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer justify-self-end">
-                                            Add Item
-                                        </button>
+                                        <div className="w-42.5 flex justify-end">
+                                            {isBooking ? (
+                                                <button
+                                                    className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                                                    onClick={() => handleAddClick(item)}
+                                                >
+                                                    Add Item
+                                                </button>
+                                            ) : (
+                                                <div className="w-22.25" />
+                                            )}
+                                        </div>
                                     </div>
                                 ))
                             ) : (
@@ -221,6 +270,13 @@ export default function Catalogue() {
                     </>
                 )}
             </div>
+            <ErrorModal
+                open={errorMessage !== null}
+                title="Booking details required"
+                message={errorMessage ?? ""}
+                buttonText="OK"
+                onClose={() => setErrorMessage(null)}
+            />
         </div>
     );
 }

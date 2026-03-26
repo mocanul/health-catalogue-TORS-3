@@ -8,21 +8,21 @@ datasource db {
 }
 
 model User {
-  id                                                       Int                   @id @default(autoincrement())
-  first_name                                               String?               @db.VarChar(255)
-  last_name                                                String?               @db.VarChar(255)
-  email                                                    String                @unique @db.VarChar(255)
-  role                                                     UserRole
-  is_active                                                Boolean               @default(true)
-  created_at                                               DateTime              @default(now())
-  passwordHash                                             String
-  auditLogs                                                AuditLog[]
-  bookings                                                 Booking[]
-  BookingCollaborator_BookingCollaborator_invited_byToUser BookingCollaborator[] @relation("BookingCollaborator_invited_byToUser")
-  BookingCollaborator_BookingCollaborator_user_idToUser    BookingCollaborator[] @relation("BookingCollaborator_user_idToUser")
-  Favourite                                                Favourite[]
-  PasswordSetupToken                                       PasswordSetupToken[]
-  sessions                                                 Session[]
+  id                 Int                   @id @default(autoincrement())
+  first_name         String?               @db.VarChar(255)
+  last_name          String?               @db.VarChar(255)
+  email              String                @unique @db.VarChar(255)
+  role               UserRole
+  is_active          Boolean               @default(true)
+  created_at         DateTime              @default(now())
+  passwordHash       String
+  auditLogs          AuditLog[]
+  bookings           Booking[]
+  sentInvitations    BookingCollaborator[] @relation("InvitedBy")
+  collaborations     BookingCollaborator[]
+  favourites         Favourite[]
+  PasswordSetupToken PasswordSetupToken[]
+  sessions           Session[]
 }
 
 model AuditLog {
@@ -41,25 +41,39 @@ model AuditLog {
 }
 
 model Booking {
-  id                  Int                   @id @default(autoincrement())
-  created_by          Int
-  room_id             Int
-  booking_date        DateTime              @db.Date
-  status              BookingStatus         @default(DRAFT)
-  created_at          DateTime              @default(now())
-  updated_at          DateTime              @updatedAt
-  lesson              String?               @db.VarChar(255)
-  other_requirement   String?
-  start_time          String                @db.VarChar(5)
-  end_time            String                @db.VarChar(5)
-  user                User                  @relation(fields: [created_by], references: [id])
-  room                Room                  @relation(fields: [room_id], references: [id])
-  BookingCollaborator BookingCollaborator[]
-  bookingItems        BookingItem[]
+  id                Int                   @id @default(autoincrement())
+  created_by        Int
+  room_id           Int
+  booking_date      DateTime              @db.Date
+  status            BookingStatus         @default(DRAFT)
+  created_at        DateTime              @default(now())
+  updated_at        DateTime              @updatedAt
+  lesson            String?               @db.VarChar(255)
+  other_requirement String?
+  start_time        String                @db.VarChar(5)
+  end_time          String                @db.VarChar(5)
+  user              User                  @relation(fields: [created_by], references: [id])
+  room              Room                  @relation(fields: [room_id], references: [id])
+  collaborators     BookingCollaborator[]
+  bookingItems      BookingItem[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
+}
+
+model BookingCollaborator {
+  booking_id Int
+  user_id    Int
+  invited_by Int
+  status     CollaboratorStatus @default(PENDING)
+  booking    Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  inviter    User               @relation("InvitedBy", fields: [invited_by], references: [id])
+  user       User               @relation(fields: [user_id], references: [id])
+
+  @@id([booking_id, user_id])
+  @@index([user_id])
+  @@index([invited_by])
 }
 
 model BookingItem {
@@ -94,9 +108,8 @@ model Equipment {
 model Favourite {
   user_id      Int
   equipment_id Int
-
-  user      User      @relation(fields: [user_id], references: [id])
-  equipment Equipment @relation(fields: [equipment_id], references: [id])
+  equipment    Equipment @relation(fields: [equipment_id], references: [id])
+  user         User      @relation(fields: [user_id], references: [id])
 
   @@id([user_id, equipment_id])
 }
