@@ -11,8 +11,8 @@ export default function Home() {
         { href: "/login", label: "Login", primary: true }
       ]} />
 
-      <main className="flex-1 flex flex-col items-center justify-center bg-gray-50 px-10 py-8">
-        <div className="max-w-[90%] w-full mx-auto p-12 bg-white flex flex-col items-center justify-center text-center">
+      <main className="bg-gray-10 flex-1 flex flex-col items-center justify-center  px-10 py-8">
+        <div className="max-w-[90%] w-full mx-auto p-12 flex flex-col items-center justify-center text-center">
           <Image
             src="/TORS_logo.png"
             width={300}

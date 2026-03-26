@@ -60,7 +60,8 @@ export default function StaffDashboard() {
             <Navbar
                 showLogout={true}
                 links={[
-                    { href: "/dashboard/staff", label: "Home", primary: true },
+                    {href: "/dashboard/staff", label: "Home", primary: true},
+                    {href: "/dashboard/bookings/staff", label: "Bookings"}
                 ]}
             />
 
