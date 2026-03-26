@@ -74,25 +74,7 @@ export default function Booking({
     const [selectedContributors, setSelectedContributors] = useState<Contributor[]>([]);
 
     const [otherRequirement, setOtherRequirement] = useState("");
-
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const roomsRes = await fetch("/api/booking/rooms");
-
-                if (!roomsRes.ok) {
-                    throw new Error("Failed to fetch rooms");
-                }
-
-                const roomsData: Room[] = await roomsRes.json();
-                setRooms(roomsData);
-            } catch (error) {
-                console.error("Failed to load timetable data:", error);
-            }
-        }
-
-        fetchData();
-    }, []);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -288,6 +270,13 @@ export default function Booking({
                                 </button>
 
                             </div>
+
+                            <a href="/forms/HSform.docx"
+                                download="Health_and_Safety_Form.docx"
+                                className="text-xs text-blue-500 hover:underline cursor-pointer w-fit -mt-2">
+                                Download H&S Form
+                            </a>
+
                             {showContributorSearch && (
                                 <ContributorSearch
                                     selectedContributors={selectedContributors}
@@ -303,7 +292,7 @@ export default function Booking({
                             )}
 
                             {submitting ? (
-                                // Loading state replaces all buttons
+                                //loading state replacing all buttons
                                 <div className="flex items-center justify-center gap-2 py-2">
                                     <svg className="animate-spin w-4 h-4 text-[#B80050]" viewBox="0 0 24 24" fill="none">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -311,21 +300,46 @@ export default function Booking({
                                     </svg>
                                     <p className="text-xs text-gray-400">Saving draft...</p>
                                 </div>
+
+                                //show confirmation message for when cancelling booking
+                            ) : showCancelConfirm ? (
+                                <div className="flex flex-col gap-2 w-full">
+                                    <p className="text-xs text-gray-500 text-center">Are you sure? Your booking will be lost.</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setShowCancelConfirm(false)}
+                                            className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+                transition-all cursor-pointer"
+                                        >
+                                            Go back
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsBooking(false);
+                                                setTitle("");
+                                                setHsFile(null);
+                                                setSubmitError(null);
+                                                setOtherRequirement("");
+                                                setShowCancelConfirm(false);
+                                                onSelectedSlotChange(null);
+                                                clearItems();
+                                            }}
+                                            className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg bg-red-500 hover:bg-red-600 text-white
+                transition-all cursor-pointer"
+                                        >
+                                            Yes, cancel
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="flex flex-row gap-2">
                                     <button
-                                        onClick={() => {
-                                            setIsBooking(false);
-                                            setTitle("");
-                                            setHsFile(null);
-                                            setSubmitError(null);
-                                            setOtherRequirement("");
-                                            onSelectedSlotChange(null);
-                                            clearItems();
-                                        }}
+                                        onClick={() => setShowCancelConfirm(true)}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
-                transition-all cursor-pointer"
+            rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+            transition-all cursor-pointer"
                                     >
                                         Cancel
                                     </button>
@@ -333,8 +347,8 @@ export default function Booking({
                                     <button
                                         onClick={handleDraft}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
-                transition-all cursor-pointer"
+            rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
+            transition-all cursor-pointer"
                                     >
                                         Draft
                                     </button>
@@ -348,8 +362,8 @@ export default function Booking({
                                             setSubmitError(null);
                                         }}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
-                rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
-                hover:shadow-md transition-all cursor-pointer"
+            rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
+            hover:shadow-md transition-all cursor-pointer"
                                     >
                                         Finalise
                                     </button>
