@@ -1,12 +1,29 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 
-export default function ViewBookingButton({booking}: {booking: any}) {
-    const [open, setOpen] = useState(false);
+export default function ViewBookingButton({booking, role}: {booking: any, role: string}) {
+    const [open, setOpen] = useState(false)
+    const router = useRouter()
+
+    const editBookingButton = () => {
+        if(role === "ADMIN"){
+            router.push('/dashboard/admin/catalogue')
+        }
+        else if(role === "TECHNICIAN"){
+            router.push('/dashboard/technician/catalogue')
+        }
+        else if(role === "STAFF"){
+            router.push('/dashboard/staff/catalogue')
+        }
+        else if(role === "STUDENT"){
+            router.push('/dashboard/student/catalogue')
+        }
+    }
 
     return (
-        <>
+        <div>
             <button
                 onClick={() => setOpen(true)}
                 className="bg-[#B80050] px-5 py-1 text-white rounded font-medium text-sm"
@@ -29,6 +46,21 @@ export default function ViewBookingButton({booking}: {booking: any}) {
                             <p><strong>Time:</strong> {booking.start_time} - {booking.end_time}</p>
                             <p><strong>Status:</strong> {booking.status}</p>
 
+                            <div className="flex gap-5 justify-center">
+                                <button
+                                    onClick={editBookingButton}
+                                    className="max-w-20 w-full mt-4 bg-[#B80050] text-white py-2 rounded"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={() => setOpen(false)}
+                                    className="max-w-20 w-full mt-4 bg-gray-300 py-2 rounded"
+                                >
+                                    Close
+                                </button>
+                            </div>
+
                             {booking.bookingItems && booking.bookingItems.length > 0 && (
                                 <div className="mt-4">
                                     <h3 className="text-lg font-semibold mb-2">Equipment</h3>
@@ -43,24 +75,9 @@ export default function ViewBookingButton({booking}: {booking: any}) {
                                 </div>
                             )}
                         </div>
-
-                        <div className="flex gap-5 justify-center">
-                            <button
-                                className="max-w-20 w-full mt-4 bg-[#B80050] text-white py-2 rounded"
-                            >
-                                Edit
-                            </button>
-
-                            <button
-                                onClick={() => setOpen(false)}
-                                className="max-w-20 w-full mt-4 bg-gray-300 py-2 rounded"
-                            >
-                                Close
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}
-        </>
-    );
+        </div>
+    )
 }

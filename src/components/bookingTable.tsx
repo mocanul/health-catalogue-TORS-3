@@ -1,3 +1,5 @@
+"use server"
+
 import { prisma } from "@/lib/prisma";
 import {validateSession} from "@/lib/auth/session"
 import {cookies} from "next/headers"
@@ -95,7 +97,7 @@ export default async function Bookings() {
                                     
                                     <td className="p-3 text-center border-gray-500">{item.status}</td>
                                     <td className="p-3 text-center border-gray-500">
-                                        <ViewBookingButton booking={item} />
+                                        <ViewBookingButton booking={item} role={user_role} />
                                     </td>
                                     </tr>
                                 ))}
