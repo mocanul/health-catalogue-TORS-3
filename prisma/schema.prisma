@@ -94,6 +94,7 @@ model Equipment {
   name               String        @db.VarChar(255)
   description        String?
   category           String?       @db.VarChar(255)
+  cost               Float         @default(0)
   quantity_available Int
   fixed_room_id      Int?
   is_active          Boolean       @default(true)
@@ -159,29 +160,6 @@ model PasswordSetupToken {
 
   @@index([expires_at])
   @@index([user_id])
-}
-
-model BookingCollaborator {
-  booking_id                                Int
-  user_id                                   Int
-  invited_by                                Int
-  status                                    CollaboratorStatus @default(PENDING)
-  Booking                                   Booking            @relation(fields: [booking_id], references: [id], onDelete: Cascade)
-  User_BookingCollaborator_invited_byToUser User               @relation("BookingCollaborator_invited_byToUser", fields: [invited_by], references: [id])
-  User_BookingCollaborator_user_idToUser    User               @relation("BookingCollaborator_user_idToUser", fields: [user_id], references: [id])
-
-  @@id([booking_id, user_id])
-  @@index([invited_by])
-  @@index([user_id])
-}
-
-model Favourite {
-  user_id      Int
-  equipment_id Int
-  Equipment    Equipment @relation(fields: [equipment_id], references: [id])
-  User         User      @relation(fields: [user_id], references: [id])
-
-  @@id([user_id, equipment_id])
 }
 
 enum BookingStatus {
