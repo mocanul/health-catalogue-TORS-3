@@ -17,8 +17,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const { lesson, room_name, booking_date, start_time, end_time, other_requirement, hs_form_path, items } = body;
-
+        const { lesson, room_name, booking_date, start_time, end_time, other_requirement, hs_form_path, items, status } = body;
         // Find room by name
         const room = await prisma.room.findFirst({
             where: { name: room_name },
@@ -35,7 +34,7 @@ export async function POST(req: Request) {
                 booking_date: new Date(`${booking_date}T00:00:00`),
                 start_time,
                 end_time,
-                status: "DRAFT",
+                status: status ?? "DRAFT",
                 updated_at: new Date(),
                 hs_form_path: hs_form_path ?? null,
                 bookingItems: {

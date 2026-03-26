@@ -19,9 +19,11 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(bytes);
     const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
+    const fileExtension = file.name.split(".").pop();
+
     const result = await cloudinary.uploader.upload(base64, {
         folder: "hs_forms",
-        public_id: `user_${user.id}_${Date.now()}`,
+        public_id: `user_${user.id}_${Date.now()}.${fileExtension}`,
         resource_type: "raw",
     });
 

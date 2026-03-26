@@ -75,6 +75,7 @@ export default function Booking({
 
     const [otherRequirement, setOtherRequirement] = useState("");
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [showFinaliseConfirm, setShowFinaliseConfirm] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -142,6 +143,61 @@ export default function Booking({
             setTitle("");
             setOtherRequirement("");
             setHsFile(null);
+            onSelectedSlotChange(null);
+            clearItems();
+
+        } catch {
+            setSubmitError("Something went wrong. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleFinalise = async () => {
+        setSubmitting(true);
+        setSubmitError(null);
+
+        try {
+            let hs_form_path = null;
+
+            if (hsFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append("file", hsFile);
+                const uploadRes = await fetch("/api/booking/upload", {
+                    method: "POST",
+                    body: uploadFormData,
+                });
+                if (!uploadRes.ok) throw new Error("Failed to upload file");
+                const uploadData = await uploadRes.json();
+                hs_form_path = uploadData.url;
+            }
+
+            const res = await fetch("/api/booking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    lesson: title,
+                    room_name: selectedSlot?.roomName,
+                    booking_date: selectedSlot?.bookingDate,
+                    start_time: selectedSlot?.startTime,
+                    end_time: selectedSlot?.endTime,
+                    other_requirement: otherRequirement,
+                    hs_form_path,
+                    status: "SUBMITTED",
+                    items: bookingItems.map((item) => ({
+                        id: item.id,
+                        quantity: item.quantity,
+                    })),
+                }),
+            });
+
+            if (!res.ok) throw new Error("Failed to create booking");
+
+            setIsBooking(false);
+            setTitle("");
+            setOtherRequirement("");
+            setHsFile(null);
+            setShowFinaliseConfirm(false);
             onSelectedSlotChange(null);
             clearItems();
 
@@ -257,7 +313,7 @@ export default function Booking({
                                             : "bg-[#B80050] hover:bg-[#9a0044] text-white"
                                         }`}
                                 >
-                                    {hsFile ? `✓ ${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
+                                    {hsFile ? ` ${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
                                 </button>
 
                                 <button
@@ -298,8 +354,10 @@ export default function Booking({
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                                     </svg>
-                                    <p className="text-xs text-gray-400">Saving draft...</p>
+                                    <p className="text-xs text-gray-400">Loading...</p>
                                 </div>
+
+
 
                                 //show confirmation message for when cancelling booking
                             ) : showCancelConfirm ? (
@@ -333,6 +391,29 @@ export default function Booking({
                                         </button>
                                     </div>
                                 </div>
+
+                            ) : showFinaliseConfirm ? (
+                                <div className="flex flex-col gap-2 w-full">
+                                    <p className="text-xs text-gray-500 text-center">Are you sure you want to submit this booking?</p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setShowFinaliseConfirm(false)}
+                                            className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50
+                transition-all cursor-pointer"
+                                        >
+                                            Go back
+                                        </button>
+                                        <button
+                                            onClick={handleFinalise}
+                                            className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
+                rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white
+                transition-all cursor-pointer"
+                                        >
+                                            Yes, submit
+                                        </button>
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="flex flex-row gap-2">
                                     <button
@@ -355,17 +436,26 @@ export default function Booking({
 
                                     <button
                                         onClick={() => {
+                                            if (!title.trim()) {
+                                                setSubmitError("Please enter a lesson name.");
+                                                return;
+                                            }
+                                            if (!selectedSlot) {
+                                                setSubmitError("Please select a room, date and time.");
+                                                return;
+                                            }
                                             if (!hsFile) {
                                                 setSubmitError("Please attach a H&S form before finalising.");
                                                 return;
                                             }
                                             setSubmitError(null);
+                                            setShowFinaliseConfirm(true);
                                         }}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
             rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
             hover:shadow-md transition-all cursor-pointer"
                                     >
-                                        Finalise
+                                        Submit
                                     </button>
                                 </div>
                             )}
