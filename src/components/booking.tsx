@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Timetable from "./modals/timetable";
+import ContributorSearch from "./inviteContributor";
 
 type Room = {
     id: number;
@@ -29,6 +30,12 @@ type SelectedBookingSlot = {
     roomName: string;
     startTime: string;
     endTime: string;
+};
+
+type Contributor = {
+    id: number;
+    first_name: string;
+    last_name: string;
 };
 
 type Props = {
@@ -62,6 +69,9 @@ export default function Booking({
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const hsInputRef = useRef<HTMLInputElement>(null);
+
+    const [showContributorSearch, setShowContributorSearch] = useState(false);
+    const [selectedContributors, setSelectedContributors] = useState<Contributor[]>([]);
 
     const [otherRequirement, setOtherRequirement] = useState("");
 
@@ -228,12 +238,23 @@ export default function Booking({
                                     {hsFile ? `✓ ${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
                                 </button>
 
-                                <button className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
-        rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
-        bg-[#B80050] hover:bg-[#9a0044] text-white">
+                                <button
+                                    onClick={() => setShowContributorSearch((prev) => !prev)}
+                                    className="flex-1 flex items-center justify-center gap-2 text-sm font-medium px-4 py-2.5
+    rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
+    bg-[#B80050] hover:bg-[#9a0044] text-white"
+                                >
                                     Invite Contributor
                                 </button>
+
                             </div>
+                            {showContributorSearch && (
+                                <ContributorSearch
+                                    selectedContributors={selectedContributors}
+                                    onAdd={(user) => setSelectedContributors((prev) => [...prev, user])}
+                                    onRemove={(id) => setSelectedContributors((prev) => prev.filter((c) => c.id !== id))}
+                                />
+                            )}
                         </div>
 
                         <div className="flex flex-col gap-2 p-4 border-t border-gray-200 shrink-0">
@@ -247,6 +268,8 @@ export default function Booking({
                                         setTitle("");
                                         setHsFile(null);
                                         setSubmitError(null);
+                                        setSelectedContributors([]);
+                                        setShowContributorSearch(false);
                                         onSelectedSlotChange(null);
                                         clearItems();
                                     }}

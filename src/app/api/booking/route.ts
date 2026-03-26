@@ -33,8 +33,8 @@ export async function POST(req: Request) {
                 lesson,
                 other_requirement: other_requirement ?? null,
                 booking_date: new Date(booking_date),
-                start_time: new Date(`${booking_date}T${start_time}`),
-                end_time: new Date(`${booking_date}T${end_time}`),
+                start_time: start_time,
+                end_time: end_time,
                 status: "DRAFT",
                 bookingItems: {
                     create: items.map((item: { id: number; quantity: number }) => ({
