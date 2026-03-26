@@ -133,6 +133,8 @@ model Favourite {
   equipment_id Int
   equipment    Equipment @relation(fields: [equipment_id], references: [id])
   user         User      @relation(fields: [user_id], references: [id])
+  equipment    Equipment @relation(fields: [equipment_id], references: [id])
+  user         User      @relation(fields: [user_id], references: [id])
 
   @@id([user_id, equipment_id])
 }
