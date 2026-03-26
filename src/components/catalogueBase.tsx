@@ -1,33 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ErrorModal from "./modals/errorMessage";
-
-type Room = {
-    id: number;
-    name: string;
-    type: string | null;
-};
-
-type BookingItem = {
-    id: number;
-    name: string;
-    quantity: number;
-};
-
-type SelectedBookingSlot = {
-    bookingDate: string;
-    roomName: string;
-    startTime: string;
-    endTime: string;
-};
-
-type Props = {
-    selectedRoom: Room | null;
-    selectedSlot: SelectedBookingSlot | null;
-    isBooking: boolean;
-    onAddItem: (item: BookingItem) => void;
-};
+import { EQUIPMENT_KITS, type EquipmentKit } from "@/lib/equipmentKits";
 
 type Equipment = {
     id: number;
@@ -47,6 +21,7 @@ const TABS = [
     "Emergency & Rehab",
     "Specialist Care",
     "Favourites",
+    "Equipment Kits",
 ] as const;
 
 const TAB_CATEGORIES: Record<string, string[]> = {
@@ -56,16 +31,20 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Emergency & Rehab": ["Emergency & Pre-hospital (Paramedic)", "MSK", "Patient Manoeuvering"],
     "Specialist Care": ["Midwifery", "Mental Health", "Dietetics", "Nutrition & Anthropometry"],
     "Favourites": [],
+    "Equipment Kits": [],
 };
 
-export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
+export default function Catalogue() {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<string>("General Equipment");
     const [search, setSearch] = useState("");
     const [favourites, setFavourites] = useState<Set<number>>(new Set());
+
+    // Equipment Kits state
+    const [selectedKit, setSelectedKit] = useState<EquipmentKit | null>(null);
+    const [kitPreviewIds, setKitPreviewIds] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         fetch("/api/equipment")
@@ -90,8 +69,30 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
             .catch(() => { });
     }, []);
 
+    // When the selected kit changes, update the highlighted item IDs
+    useEffect(() => {
+        if (selectedKit) {
+            setKitPreviewIds(new Set(selectedKit.itemIds));
+        } else {
+            setKitPreviewIds(new Set());
+        }
+    }, [selectedKit]);
+
+    // Reset kit selection when leaving the Equipment Kits tab
+    useEffect(() => {
+        if (activeTab !== "Equipment Kits") {
+            setSelectedKit(null);
+        }
+    }, [activeTab]);
+
     const filtered = equipment.filter((item) => {
         if (activeTab === "Favourites") return favourites.has(item.id);
+        if (activeTab === "Equipment Kits") {
+            // Show only items that belong to the selected kit (if one is chosen),
+            // otherwise show all equipment so the user can see what's available
+            if (selectedKit) return kitPreviewIds.has(item.id);
+            return true;
+        }
         const matchesTab = TAB_CATEGORIES[activeTab]?.includes(item.category ?? "");
         const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
         return matchesTab && matchesSearch;
@@ -129,29 +130,14 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
         }
     };
 
-    const handleAddClick = (item: Equipment) => {
-        const hasBookingSlot =
-            selectedSlot &&
-            selectedSlot.roomName &&
-            selectedSlot.bookingDate &&
-            selectedSlot.startTime &&
-            selectedSlot.endTime;
-
-        if (!hasBookingSlot) {
-            setErrorMessage("Please select room, date and time before adding items to booking.");
-            return;
-        }
-
-        onAddItem({
-            id: item.id,
-            name: item.name,
-            quantity: 1,
-        });
+    const handleKitSelect = (kitId: string) => {
+        const kit = EQUIPMENT_KITS.find((k) => k.id === kitId) ?? null;
+        setSelectedKit(kit);
     };
 
     return (
-        <div className="flex justify-center px-6 py-8 w-[75%]">
-            <div className="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        <div className="flex justify-center px-6 py-8">
+            <div className="w-full max-w-6xl bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
 
                 {/* Tab Bar */}
                 <div className="border-b border-gray-200 px-4 flex items-center justify-between">
@@ -172,23 +158,63 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
 
                     <div className="flex items-center gap-2 ml-2 shrink-0">
 
-                        {/* Search box */}
-                        <div className="flex items-center border border-gray-300 rounded overflow-hidden">
-                            <input
-                                type="text"
-                                placeholder="Search"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="px-2.5 py-1 text-xs outline-none w-28"
-                            />
-                            <div className="px-2 text-gray-400">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-                                </svg>
+                        {/* Kit selector dropdown — only shown on Equipment Kits tab */}
+                        {activeTab === "Equipment Kits" && (
+                            <select
+                                value={selectedKit?.id ?? ""}
+                                onChange={(e) => handleKitSelect(e.target.value)}
+                                className="border border-gray-300 rounded px-2.5 py-1 text-xs outline-none text-gray-700 bg-white cursor-pointer"
+                            >
+                                <option value="" disabled>Select a kit...</option>
+                                {EQUIPMENT_KITS.map((kit) => (
+                                    <option key={kit.id} value={kit.id}>
+                                        {kit.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        {/* Search box — hidden on Equipment Kits tab as kit filter replaces it */}
+                        {activeTab !== "Equipment Kits" && (
+                            <div className="flex items-center border border-gray-300 rounded overflow-hidden">
+                                <input
+                                    type="text"
+                                    placeholder="Search"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="px-2.5 py-1 text-xs outline-none w-28"
+                                />
+                                <div className="px-2 text-gray-400">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                                    </svg>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
+
+                {/* Kit description banner */}
+                {activeTab === "Equipment Kits" && selectedKit && (
+                    <div className="px-4 py-2.5 bg-pink-50 border-b border-pink-100 flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold text-[#B80050]">{selectedKit.name}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{selectedKit.description}</p>
+                        </div>
+                        <span className="text-xs bg-white text-[#B80050] border border-pink-200 px-2 py-0.5 rounded-full font-medium">
+                            {selectedKit.itemIds.length} items
+                        </span>
+                    </div>
+                )}
+
+                {/* Kit prompt banner — shown when no kit is selected yet */}
+                {activeTab === "Equipment Kits" && !selectedKit && (
+                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                        <p className="text-xs text-gray-500">
+                            Select a kit from the dropdown above to auto-select its 5 items.
+                        </p>
+                    </div>
+                )}
 
                 {/* Content */}
                 {loading ? (
@@ -198,7 +224,8 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                 ) : (
                     <>
                         {/* Header row */}
-                        <div className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50 h-10 items-center">
+                        <div className="grid grid-cols-[2rem_3.5rem_2fr_1fr_1fr_1fr] gap-4 px-4 py-2 border-b border-gray-200 bg-gray-50">
+                            <div />
                             <div />
                             <p className="text-xs font-medium text-gray-500">Item</p>
                             <p className="text-xs font-medium text-gray-500">Category</p>
@@ -206,77 +233,77 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                             <div />
                         </div>
 
-                        <div className="divide-y divide-gray-100 max-h-170 overflow-y-auto">
+                        <div className="divide-y divide-gray-100 max-h-130 overflow-y-auto">
                             {filtered.length > 0 ? (
-                                filtered.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="grid grid-cols-[2rem_minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_170px] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border border-gray-100 hover:border-gray-300 hover:shadow-md transition-all bg-white h-14"
-                                    >
-                                        {/* Favourite Star */}
-                                        <button
-                                            onClick={() => toggleFavourite(item.id)}
-                                            className="text-gray-300 hover:text-yellow-400 transition-colors cursor-pointer"
+                                filtered.map((item) => {
+                                    const isKitItem = activeTab === "Equipment Kits" && kitPreviewIds.has(item.id);
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className={`grid grid-cols-[2rem_3.5rem_2fr_1fr_1fr_1fr] gap-4 items-center px-4 py-3 rounded-lg shadow-sm border transition-all bg-white ${isKitItem
+                                                ? "border-[#B80050] bg-pink-50/30"
+                                                : "border-gray-100 hover:border-gray-300 hover:shadow-md"
+                                                }`}
                                         >
-                                            <svg
-                                                width="16" height="16" viewBox="0 0 24 24"
-                                                fill={favourites.has(item.id) ? "#facc15" : "none"}
-                                                stroke={favourites.has(item.id) ? "#facc15" : "currentColor"}
-                                                strokeWidth="1.5"
+                                            {/* Favourite Star */}
+                                            <button
+                                                onClick={() => toggleFavourite(item.id)}
+                                                className="text-gray-300 hover:text-yellow-400 transition-colors cursor-pointer"
                                             >
-                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                            </svg>
-                                        </button>
-
-                                        {/* Name */}
-                                        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-
-                                        {/* Category */}
-                                        <span className="text-xs bg-pink-50 text-pink-700 border border-pink-200 px-2 py-0.5 rounded-full truncate w-fit">
-                                            {item.category ?? "—"}
-                                        </span>
-
-                                        {/* Item availability */}
-                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full w-fit ${item.quantity_available > 0
-                                            ? "bg-green-50 text-green-700 border border-green-200"
-                                            : "bg-red-50 text-red-500 border border-red-200"
-                                            }`}>
-                                            {item.quantity_available > 0 ? "Available" : "Unavailable"}
-                                        </span>
-
-                                        {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
-                                        <div className="w-42.5 flex justify-end">
-                                            {isBooking ? (
-                                                <button
-                                                    className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
-                                                    onClick={() => handleAddClick(item)}
+                                                <svg
+                                                    width="16" height="16" viewBox="0 0 24 24"
+                                                    fill={favourites.has(item.id) ? "#facc15" : "none"}
+                                                    stroke={favourites.has(item.id) ? "#facc15" : "currentColor"}
+                                                    strokeWidth="1.5"
                                                 >
-                                                    Add Item
-                                                </button>
-                                            ) : (
-                                                <div className="w-22.25" />
-                                            )}
+                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Image */}
+                                            <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center">
+                                                <svg className="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                                </svg>
+                                            </div>
+
+                                            {/* Name */}
+                                            <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+
+                                            {/* Category */}
+                                            <span className="text-xs bg-pink-50 text-pink-700 border border-pink-200 px-2 py-0.5 rounded-full truncate w-fit">
+                                                {item.category ?? "—"}
+                                            </span>
+
+                                            {/* Item availability */}
+                                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full w-fit ${item.quantity_available > 0
+                                                ? "bg-green-50 text-green-700 border border-green-200"
+                                                : "bg-red-50 text-red-500 border border-red-200"
+                                                }`}>
+                                                {item.quantity_available > 0 ? "Available" : "Unavailable"}
+                                            </span>
+
+                                            {/* Add item to basket button TODO: to be changed to only show whilst booking mode is active */}
+                                            <button className="bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer justify-self-end">
+                                                Add Item
+                                            </button>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
                                 <div className="py-16 text-center text-gray-400 text-sm">
                                     {activeTab === "Favourites"
                                         ? "Star an item to add it here."
-                                        : "No items found."}
+                                        : activeTab === "Equipment Kits" && !selectedKit
+                                            ? "Select a kit from the dropdown to see its items."
+                                            : "No items found."}
                                 </div>
                             )}
                         </div>
                     </>
                 )}
             </div>
-            <ErrorModal
-                open={errorMessage !== null}
-                title="Booking details required"
-                message={errorMessage ?? ""}
-                buttonText="OK"
-                onClose={() => setErrorMessage(null)}
-            />
         </div>
     );
 }
