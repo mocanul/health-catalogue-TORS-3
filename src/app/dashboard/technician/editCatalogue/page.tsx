@@ -1,9 +1,19 @@
-import Navbar from "@/components/Navbar"
-import Catalogue from "@/components/catalogueEditor"
+import Navbar from "@/components/Navbar";
+import CatalogueEditor from "@/components/catalogueEditor";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+export default async function Home() {
+  const equipment = await prisma.equipment.findMany({
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      category: true,
+      cost: true,
+      quantity_available: true,
+    },
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -14,8 +24,7 @@ export default function Home() {
         { href: "/dashboard/technician/editCatalogue", label: "Edit Catalogue", primary: true }
       ]} />
 
-      <Catalogue />
-
+      <CatalogueEditor equipment={equipment} />
     </div>
-  )
+  );
 }

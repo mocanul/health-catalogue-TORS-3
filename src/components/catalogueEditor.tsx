@@ -279,128 +279,128 @@ export default function CatalogueEditor({ equipment }: CatalogueEditorProps) {
             </div>
 
             {activeItem && (
-                <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/55 p-4">
+                <div className="fixed inset-0 z-120 overflow-y-auto bg-black/55 p-4">
                     <div className="flex min-h-full items-center justify-center">
                         <div className="my-8 flex w-full max-w-2xl max-h-[90vh] flex-col rounded-3xl bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
                             <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-4">
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-900">
-                                    {activeItem.id === null ? "Add catalogue item" : "Edit catalogue item"}
-                                </h3>
-                                <p className="mt-2 text-gray-600">
-                                    {activeItem.id === null
-                                        ? "Add a new item into the equipment catalogue."
-                                        : "Update the item details below and save the changes back to the equipment catalogue."}
-                                </p>
-                            </div>
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-900">
+                                        {activeItem.id === null ? "Add catalogue item" : "Edit catalogue item"}
+                                    </h3>
+                                    <p className="mt-2 text-gray-600">
+                                        {activeItem.id === null
+                                            ? "Add a new item into the equipment catalogue."
+                                            : "Update the item details below and save the changes back to the equipment catalogue."}
+                                    </p>
+                                </div>
 
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setActiveItem(null);
-                                    setIsOtherCategory(false);
-                                }}
-                                className="rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                            >
-                                Close
-                            </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setActiveItem(null);
+                                        setIsOtherCategory(false);
+                                    }}
+                                    className="rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                                >
+                                    Close
+                                </button>
                             </div>
 
                             <div className="mt-6 grid gap-5 overflow-y-auto pr-1">
                                 <label className="block">
-                                <span className="mb-2 block text-sm font-semibold text-gray-900">Item name</span>
-                                <input
-                                    type="text"
-                                    value={activeItem.name}
-                                    onChange={(event) =>
-                                        setActiveItem({ ...activeItem, name: event.target.value })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
-                                />
-                            </label>
-
-                                <label className="block">
-                                <span className="mb-2 block text-sm font-semibold text-gray-900">Description</span>
-                                <textarea
-                                    value={activeItem.description}
-                                    onChange={(event) =>
-                                        setActiveItem({ ...activeItem, description: event.target.value })
-                                    }
-                                    rows={5}
-                                    className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
-                                />
-                            </label>
-
-                                <label className="block">
-                                <span className="mb-2 block text-sm font-semibold text-gray-900">Category</span>
-                                <select
-                                    value={isOtherCategory ? "other" : activeItem.category}
-                                    onChange={(event) => {
-                                        const value = event.target.value;
-
-                                        setIsOtherCategory(value === "other");
-                                        setActiveItem({
-                                            ...activeItem,
-                                            category: value === "other" ? "" : value,
-                                        });
-                                    }}
-                                    className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
-                                >
-                                    <option value="">Select a category</option>
-                                    {categories.map((category) => (
-                                        <option key={category} value={category ?? ""}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                    <option value="other">Other</option>
-                                </select>
-                            </label>
-
-                                {isOtherCategory && (
-                                    <label className="block">
-                                    <span className="mb-2 block text-sm font-semibold text-gray-900">Other category</span>
+                                    <span className="mb-2 block text-sm font-semibold text-gray-900">Item name</span>
                                     <input
                                         type="text"
-                                        value={activeItem.category}
+                                        value={activeItem.name}
                                         onChange={(event) =>
-                                            setActiveItem({ ...activeItem, category: event.target.value })
+                                            setActiveItem({ ...activeItem, name: event.target.value })
                                         }
                                         className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
                                     />
+                                </label>
+
+                                <label className="block">
+                                    <span className="mb-2 block text-sm font-semibold text-gray-900">Description</span>
+                                    <textarea
+                                        value={activeItem.description}
+                                        onChange={(event) =>
+                                            setActiveItem({ ...activeItem, description: event.target.value })
+                                        }
+                                        rows={5}
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
+                                    />
+                                </label>
+
+                                <label className="block">
+                                    <span className="mb-2 block text-sm font-semibold text-gray-900">Category</span>
+                                    <select
+                                        value={isOtherCategory ? "other" : activeItem.category}
+                                        onChange={(event) => {
+                                            const value = event.target.value;
+
+                                            setIsOtherCategory(value === "other");
+                                            setActiveItem({
+                                                ...activeItem,
+                                                category: value === "other" ? "" : value,
+                                            });
+                                        }}
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
+                                    >
+                                        <option value="">Select a category</option>
+                                        {categories.map((category) => (
+                                            <option key={category} value={category ?? ""}>
+                                                {category}
+                                            </option>
+                                        ))}
+                                        <option value="other">Other</option>
+                                    </select>
+                                </label>
+
+                                {isOtherCategory && (
+                                    <label className="block">
+                                        <span className="mb-2 block text-sm font-semibold text-gray-900">Other category</span>
+                                        <input
+                                            type="text"
+                                            value={activeItem.category}
+                                            onChange={(event) =>
+                                                setActiveItem({ ...activeItem, category: event.target.value })
+                                            }
+                                            className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
+                                        />
                                     </label>
                                 )}
 
                                 <label className="block">
-                                <span className="mb-2 block text-sm font-semibold text-gray-900">Cost</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={activeItem.cost}
-                                    onChange={(event) =>
-                                        setActiveItem({
-                                            ...activeItem,
-                                            cost: event.target.value,
-                                        })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
-                                />
-                            </label>
+                                    <span className="mb-2 block text-sm font-semibold text-gray-900">Cost</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={activeItem.cost}
+                                        onChange={(event) =>
+                                            setActiveItem({
+                                                ...activeItem,
+                                                cost: event.target.value,
+                                            })
+                                        }
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
+                                    />
+                                </label>
 
                                 <label className="block">
-                                <span className="mb-2 block text-sm font-semibold text-gray-900">Quantity available</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={activeItem.quantity_available}
-                                    onChange={(event) =>
-                                        setActiveItem({
-                                            ...activeItem,
-                                            quantity_available: event.target.value,
-                                        })
-                                    }
-                                    className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
-                                />
+                                    <span className="mb-2 block text-sm font-semibold text-gray-900">Quantity available</span>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        value={activeItem.quantity_available}
+                                        onChange={(event) =>
+                                            setActiveItem({
+                                                ...activeItem,
+                                                quantity_available: event.target.value,
+                                            })
+                                        }
+                                        className="w-full rounded-xl border border-gray-300 px-4 py-3 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-200"
+                                    />
                                 </label>
                             </div>
 
