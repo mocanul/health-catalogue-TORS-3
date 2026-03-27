@@ -380,7 +380,7 @@ export default function TechnicianBookingBoard({
                     )}
 
                     {bookings.map((booking) => (
-                        <article key={booking.id} className="rounded-2xl border border-pink-100 bg-[linear-gradient(135deg,_rgba(255,255,255,1)_0%,_rgba(252,244,248,1)_100%)] p-5 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                        <article key={booking.id} className="rounded-2xl border border-pink-100 bg-[linear-gradient(135deg,rgba(255,255,255,1)_0%,rgba(252,244,248,1)_100%)] p-5 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
                             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="space-y-3">
                                     <div className="flex flex-wrap items-center gap-3">
@@ -477,7 +477,7 @@ export default function TechnicianBookingBoard({
                                 setTaskNotes(assignment.taskNotes);
                                 setErrorMessage("");
                             }}
-                            className="w-full rounded-2xl border border-pink-100 bg-[linear-gradient(135deg,_rgba(255,255,255,1)_0%,_rgba(252,244,248,1)_100%)] p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-pink-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)]"
+                            className="w-full rounded-2xl border border-pink-100 bg-[linear-gradient(135deg,rgba(255,255,255,1)_0%,rgba(252,244,248,1)_100%)] p-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-pink-200 hover:shadow-[0_16px_32px_rgba(15,23,42,0.08)]"
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div>
