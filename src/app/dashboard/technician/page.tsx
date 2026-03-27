@@ -199,6 +199,7 @@ export default async function TechnicianDashboard() {
                 showLogout={true}
                 links={[
                     { href: "/dashboard/technician", label: "Home", primary: true },
+                    { href: "/dashboard/technician/bookings", label: "Bookings" },
                     { href: "/dashboard/technician/catalogue", label: "Order Catalogue" },
                     { href: "/dashboard/technician/editCatalogue", label: "Edit Catalogue" },
                 ]}
