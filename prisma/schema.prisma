@@ -16,7 +16,7 @@ model AuditLog {
   old_value    Json?
   new_value    Json?
   created_at   DateTime @default(now())
-  user         User     @relation(fields: [performed_by], references: [id])
+  user         User     @relation(fields: [performed_by], references: [id], onDelete: Cascade)
 
   @@index([entity_type, entity_id])
   @@index([performed_by])
@@ -37,7 +37,7 @@ model Booking {
   review_notes      String?
   hs_form_path      String?
   description  String?
-  user              User              @relation(fields: [created_by], references: [id])
+  user              User              @relation(fields: [created_by], references: [id], onDelete: Cascade)
   room              Room              @relation(fields: [room_id], references: [id])
   bookingDocuments  BookingDocument[]
   invites           BookingInvite[]
@@ -58,8 +58,8 @@ model BookingInvite {
   sent_at     DateTime            @default(now())
   accepted_at DateTime?
   booking  Booking? @relation(fields: [booking_id], references: [id], onDelete: SetNull)
-  sender      User                @relation("InviteSender", fields: [sent_by], references: [id])
-  receiver    User                @relation("InviteReceiver", fields: [sent_to], references: [id])
+  sender      User                @relation("InviteSender", fields: [sent_by], references: [id], onDelete: Cascade)
+  receiver    User                @relation("InviteReceiver", fields: [sent_to], references: [id], onDelete: Cascade)
 
   @@index([booking_id])
   @@index([sent_by])
@@ -102,7 +102,7 @@ model BookingTask {
   status      TaskStatus @default(PENDING)
   created_at  DateTime   @default(now())
   updated_at  DateTime   @updatedAt
-  user        User       @relation(fields: [assigned_to], references: [id])
+  user        User       @relation(fields: [assigned_to], references: [id], onDelete: Cascade)
   booking     Booking    @relation(fields: [booking_id], references: [id], onDelete: Cascade)
 
   @@index([assigned_to])
@@ -130,7 +130,7 @@ model Favourite {
   user_id      Int
   equipment_id Int
   equipment    Equipment @relation(fields: [equipment_id], references: [id])
-  user         User      @relation(fields: [user_id], references: [id])
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, equipment_id])
 }

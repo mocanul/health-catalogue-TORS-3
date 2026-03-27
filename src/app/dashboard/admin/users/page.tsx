@@ -1,6 +1,5 @@
 "use client"
 import Navbar from "@/components/Navbar"
-import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Search } from "lucide-react";
 import AddUser from "@/components/modals/newUserModal"
@@ -16,7 +15,6 @@ type User = {
 
 
 export default function AdminUsersPage() {
-    const router = useRouter()
     const [users, setUsers] = useState<User[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -58,12 +56,6 @@ export default function AdminUsersPage() {
         return matchesSearch && matchesRole;
     });
 
-    async function viewActivity() {
-
-        router.push("/dashboard/admin")
-        router.refresh()
-    }
-
     function openEdit(user: User) {
         setSelectedUser(user);
         setIsEditOpen(true);
@@ -73,7 +65,7 @@ export default function AdminUsersPage() {
         <div className="flex h-full flex-col">
             <Navbar showLogout={true} links={[
                 { href: "/dashboard/admin", label: "Activity" },
-                {href: "/dashboard/admin/bookings", label: "Bookings"},
+                { href: "/dashboard/admin/bookings", label: "Bookings" },
                 { href: "/dashboard/admin/catalogue", label: "Order Catalogue" },
                 { href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue" },
                 { href: "/dashboard/admin/users", label: "Users", primary: true }
@@ -184,6 +176,10 @@ export default function AdminUsersPage() {
                 onSaved={(updated) => {
                     //update table without refetch
                     setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+                }}
+                onDeleted={(deletedId) => {
+                    setUsers((prev) => prev.filter((u) => u.id !== deletedId));
+                    setIsEditOpen(false);
                 }}
             />
         </div>
