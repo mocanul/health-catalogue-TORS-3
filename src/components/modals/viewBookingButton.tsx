@@ -9,16 +9,16 @@ export default function ViewBookingButton({booking, role}: {booking: any, role: 
 
     const editBookingButton = () => {
         if(role === "ADMIN"){
-            router.push('/dashboard/admin/catalogue')
+            router.push('/dashboard/admin/catalogue?bookingId=${booking.id}')
         }
         else if(role === "TECHNICIAN"){
-            router.push('/dashboard/technician/catalogue')
+            router.push('/dashboard/technician/catalogue?bookingId=${booking.id}')
         }
         else if(role === "STAFF"){
-            router.push('/dashboard/staff/catalogue')
+            router.push('/dashboard/staff/catalogue?bookingId=${booking.id}')
         }
         else if(role === "STUDENT"){
-            router.push('/dashboard/student/catalogue')
+            router.push('/dashboard/student/catalogue?bookingId=${booking.id}')
         }
     }
 
@@ -49,13 +49,13 @@ export default function ViewBookingButton({booking, role}: {booking: any, role: 
                             <div className="flex gap-5 justify-center">
                                 <button
                                     onClick={editBookingButton}
-                                    className="max-w-20 w-full mt-4 bg-[#B80050] text-white py-2 rounded"
+                                    className="mt-4 bg-[#B80050] border text-white px-4 py-2 rounded"
                                 >
                                     Edit
                                 </button>
                                 <button
                                     onClick={() => setOpen(false)}
-                                    className="max-w-20 w-full mt-4 bg-gray-300 py-2 rounded"
+                                    className="mt-4 bg-gray-700 border px-4 py-2 rounded"
                                 >
                                     Close
                                 </button>

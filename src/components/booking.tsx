@@ -40,6 +40,7 @@ type Contributor = {
 };
 
 type Props = {
+    bookingId?: number | null;
     selectedRoom: Room | null;
     onRoomSelect: (room: Room) => void;
     bookingItems: BookingItem[];
@@ -52,6 +53,7 @@ type Props = {
 };
 
 export default function Booking({
+    bookingId,
     bookingItems,
     onRemoveItem,
     clearItems,
