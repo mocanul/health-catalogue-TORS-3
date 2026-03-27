@@ -24,10 +24,10 @@ type SelectedBookingSlot = {
 };
 
 type Props = {
-    selectedRoom: Room | null;
-    selectedSlot: SelectedBookingSlot | null;
-    isBooking: boolean;
-    onAddItem: (item: BookingItem) => void;
+    selectedRoom?: Room | null;
+    selectedSlot?: SelectedBookingSlot | null;
+    isBooking?: boolean;
+    onAddItem?: (item: BookingItem) => void;
 };
 
 type Equipment = {
@@ -152,7 +152,7 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
             }
         }
 
-        onAddItem({
+        onAddItem?.({
             id: item.id,
             name: item.name,
             quantity: 1,
