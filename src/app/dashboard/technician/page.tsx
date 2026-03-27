@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Navbar from "@/components/Navbar";
 import DocumentResourcePanel from "@/components/documentResourcePanel";
 import TechnicianBookingBoard from "@/components/technicianBookingBoard";
