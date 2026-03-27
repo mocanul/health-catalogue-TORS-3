@@ -133,14 +133,13 @@ export default async function StaffDashboard() {
 
     return (
         <div className="flex min-h-screen flex-col">
-            <Navbar
-                showLogout={true}
-                links={[
-                    { href: "/dashboard/staff", label: "Home", primary: true },
-                ]}
-            />
+            <Navbar showLogout={true} links={[
+                { href: "/dashboard/staff", label: "Home", primary: true },
+                { href: "/dashboard/staff/bookings", label: "Bookings" },
+                { href: "/dashboard/staff/catalogue", label: "Catalogue" }
+            ]} />
 
-            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(184,0,80,0.12),_transparent_28%),linear-gradient(180deg,_#fdf7fa_0%,_#f3f4f6_45%,_#eef1f4_100%)] px-6 py-10">
+            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(184,0,80,0.12),transparent_28%),linear-gradient(180deg,#fdf7fa_0%,#f3f4f6_45%,#eef1f4_100%)] px-6 py-10">
                 <section className="relative isolate mx-auto flex max-w-7xl flex-col gap-8">
                     <div className="rounded-3xl border border-white/70 bg-white/90 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
                         <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
