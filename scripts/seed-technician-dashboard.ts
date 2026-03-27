@@ -53,7 +53,7 @@ async function main() {
                     { equipment_id: equipment[1].id, quantity_requested: 2 },
                 ],
             },
-            documents: {
+            bookingDocuments: {
                 create: [
                     {
                         file_name: "Safety and Risk Assessment.pdf",
@@ -82,7 +82,7 @@ async function main() {
                     { equipment_id: equipment[3].id, quantity_requested: 3 },
                 ],
             },
-            documents: {
+            bookingDocuments: {
                 create: [
                     {
                         file_name: "Uploaded S&R Assessment.pdf",
@@ -111,7 +111,7 @@ async function main() {
                     { equipment_id: equipment[5].id, quantity_requested: 1 },
                 ],
             },
-            documents: {
+            bookingDocuments: {
                 create: [
                     {
                         file_name: "Safety and Risk Assessment.pdf",
