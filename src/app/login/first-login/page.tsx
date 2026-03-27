@@ -11,10 +11,12 @@ type Issue = {
     path?: (string | number)[]
 }
 
-export default function FirstLogin(){
-    <Suspense fallback={<div>Loading...</div>}>
-        <FirstLoginContent/>
-    </Suspense>
+export default function FirstLogin() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <FirstLoginContent />
+        </Suspense>
+    )
 }
 
 function FirstLoginContent() {
