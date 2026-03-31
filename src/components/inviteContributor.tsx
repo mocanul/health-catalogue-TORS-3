@@ -13,10 +13,10 @@ type Props = {
     selectedContributors: Contributor[];
     onAdd: (user: Contributor) => void;
     onRemove: (id: number) => void;
-    onUpdate: (user: Contributor) => void;
+    onClear: () => void;
 };
 
-export default function ContributorSearch({ selectedContributors, onAdd, onRemove, onUpdate }: Props) {
+export default function ContributorSearch({ selectedContributors, onAdd, onRemove, onClear }: Props) {
     const [contributorSearch, setContributorSearch] = useState("");
     const [contributorResults, setContributorResults] = useState<Contributor[]>([]);
     const [searching, setSearching] = useState(false);
@@ -41,6 +41,7 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
         }
     };
 
+    // Just adds to array — no API call yet
     const handleSelect = (user: Contributor) => {
         if (selectedContributors.find((c) => c.id === user.id)) return;
         onAdd(user);
@@ -48,8 +49,8 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
         setContributorResults([]);
     };
 
+    // Sends invites for all selected contributors when Invite is clicked
     const handleInviteAll = async () => {
-        if (selectedContributors.length === 0) return;
         setInviting(true);
         try {
             for (const user of selectedContributors) {
@@ -59,10 +60,11 @@ export default function ContributorSearch({ selectedContributors, onAdd, onRemov
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ sent_to: user.id }),
                 });
-                if (!res.ok) throw new Error();
+                if (!res.ok) continue;
                 const { invite_id } = await res.json();
-                onUpdate({ ...user, invite_id });
+                onAdd({ ...user, invite_id });
             }
+            onClear();
         } catch {
             console.error("Failed to send invites");
         } finally {

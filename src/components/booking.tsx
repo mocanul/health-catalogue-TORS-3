@@ -78,6 +78,8 @@ export default function Booking({
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [showFinaliseConfirm, setShowFinaliseConfirm] = useState(false);
 
+    const pendingInviteIds = useRef<number[]>([]);
+
     useEffect(() => {
         async function fetchData() {
             try {
@@ -101,25 +103,11 @@ export default function Booking({
         fetchData();
     }, []);
 
-    const getInviteIds = () =>
-        selectedContributors
-            .map((c) => c.invite_id)
-            .filter((id): id is number => id !== undefined);
-
-    const attachInvitesToBooking = async (booking_id: number) => {
-        const inviteIds = getInviteIds();
-        if (inviteIds.length === 0) return;
-        await fetch("/api/booking/invite", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ booking_id, invite_ids: inviteIds }),
-        });
-    };
-
     const deleteInvites = async () => {
-        const inviteIds = getInviteIds();
+        const inviteIds = pendingInviteIds.current;
+        console.log("Deleting invite IDs:", inviteIds);
         if (inviteIds.length === 0) return;
-        await fetch(`/api/booking/invite?ids=${inviteIds.join(",")}`, {
+        await fetch(`/api/booking/contributor/invite?ids=${inviteIds.join(",")}`, {
             method: "DELETE",
         });
     };
@@ -136,6 +124,7 @@ export default function Booking({
         setShowContributorSearch(false);
         onSelectedSlotChange(null);
         clearItems();
+        pendingInviteIds.current = [];
     };
 
     const handleDraft = async () => {
@@ -178,30 +167,32 @@ export default function Booking({
             if (!res.ok) throw new Error("Failed to create booking");
             const data = await res.json();
 
-            //send invites for any contributors not yet invited
-            const updatedContributors = await Promise.all(
+            // Collect all invite IDs — existing + newly created
+            const allInviteIds: number[] = [...pendingInviteIds.current];
+
+            await Promise.all(
                 selectedContributors.map(async (user) => {
-                    if (user.invite_id) return user;
+                    if (user.invite_id) return; // already has invite_id
                     const inviteRes = await fetch("/api/booking/contributor/invite", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ sent_to: user.id }),
                     });
-                    if (!inviteRes.ok) return user;
+                    if (!inviteRes.ok) return;
                     const { invite_id } = await inviteRes.json();
-                    return { ...user, invite_id };
+                    allInviteIds.push(invite_id); // add new invite ID to the list
                 })
             );
 
-            const inviteIds = updatedContributors
-                .map((c) => c.invite_id)
-                .filter((id): id is number => id !== undefined);
-
-            if (inviteIds.length > 0) {
-                await fetch("/api/booking/invite", {
+            // Attach all invite IDs to the booking
+            if (allInviteIds.length > 0) {
+                await fetch("/api/booking/contributor/invite", {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ booking_id: data.booking_id, invite_ids: inviteIds }),
+                    body: JSON.stringify({
+                        booking_id: data.booking_id,
+                        invite_ids: allInviteIds,
+                    }),
                 });
             }
 
@@ -213,7 +204,7 @@ export default function Booking({
             setSubmitting(false);
         }
     };
-    const handleFinalise = async () => {
+    const handleSubmit = async () => {
         setSubmitting(true);
         setSubmitError(null);
 
@@ -253,7 +244,35 @@ export default function Booking({
 
             if (!res.ok) throw new Error("Failed to create booking");
             const data = await res.json();
-            await attachInvitesToBooking(data.booking_id);
+
+            // Collect all invite IDs — existing + newly created
+            const allInviteIds: number[] = [...pendingInviteIds.current];
+
+            await Promise.all(
+                selectedContributors.map(async (user) => {
+                    if (user.invite_id) return;
+                    const inviteRes = await fetch("/api/booking/contributor/invite", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sent_to: user.id }),
+                    });
+                    if (!inviteRes.ok) return;
+                    const { invite_id } = await inviteRes.json();
+                    allInviteIds.push(invite_id);
+                })
+            );
+
+            if (allInviteIds.length > 0) {
+                await fetch("/api/booking/contributor/invite", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        booking_id: data.booking_id,
+                        invite_ids: allInviteIds,
+                    }),
+                });
+            }
+
             resetForm();
 
         } catch {
@@ -391,14 +410,17 @@ export default function Booking({
                             {showContributorSearch && (
                                 <ContributorSearch
                                     selectedContributors={selectedContributors}
-                                    onAdd={(user) => setSelectedContributors((prev) => {
-                                        if (prev.find((c) => c.id === user.id)) return prev;
-                                        return [...prev, user];
-                                    })}
+                                    onAdd={(user) => {
+                                        if (user.invite_id) {
+                                            pendingInviteIds.current.push(user.invite_id); // this tracks it
+                                        }
+                                        setSelectedContributors((prev) => {
+                                            if (prev.find((c) => c.id === user.id)) return prev;
+                                            return [...prev, user];
+                                        });
+                                    }}
                                     onRemove={(id) => setSelectedContributors((prev) => prev.filter((c) => c.id !== id))}
-                                    onUpdate={(user) => setSelectedContributors((prev) =>   // 👈 add this
-                                        prev.map((c) => c.id === user.id ? user : c)
-                                    )}
+                                    onClear={() => setSelectedContributors([])}
                                 />
                             )}
                         </div>
@@ -456,7 +478,7 @@ export default function Booking({
                                             Go back
                                         </button>
                                         <button
-                                            onClick={handleFinalise}
+                                            onClick={handleSubmit}
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
                                             rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white
                                             transition-all cursor-pointer"
