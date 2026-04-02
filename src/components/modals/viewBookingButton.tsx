@@ -3,23 +3,19 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
-export default function ViewBookingButton({booking, role}: {booking: any, role: string}) {
+export default function ViewBookingButton({ booking, role }: { booking: any, role: string }) {
     const [open, setOpen] = useState(false)
     const router = useRouter()
 
     const editBookingButton = () => {
-        if(role === "ADMIN"){
-            router.push('/dashboard/admin/catalogue')
+        const routes: Record<string, string> = {
+            ADMIN: '/dashboard/admin/catalogue',
+            TECHNICIAN: '/dashboard/technician/catalogue',
+            STAFF: '/dashboard/staff/catalogue',
+            STUDENT: '/dashboard/student/catalogue',
         }
-        else if(role === "TECHNICIAN"){
-            router.push('/dashboard/technician/catalogue')
-        }
-        else if(role === "STAFF"){
-            router.push('/dashboard/staff/catalogue')
-        }
-        else if(role === "STUDENT"){
-            router.push('/dashboard/student/catalogue')
-        }
+        const base = routes[role]
+        if (base) router.push(`${base}?editBooking=${booking.id}`)
     }
 
     return (
