@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { BookingStatus, TaskType } from "@prisma/client";
+import { sendBookingReviewEmail } from "@/lib/mail";
 
 type ReviewRequestBody = {
     bookingId?: number;
@@ -24,6 +25,27 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: "Invalid review action." }, { status: 400 });
         }
 
+        const booking = await prisma.booking.findUnique({
+            where: { id: bookingId },
+            include: {
+                user: true,
+                room: true,
+            },
+        });
+
+        if (!booking) {
+            return NextResponse.json({ error: "Booking not found." }, { status: 404 });
+        }
+
+        const bookingDateLabel = new Intl.DateTimeFormat("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        }).format(booking.booking_date);
+
+        const bookingTitle = `${booking.room.name} - ${bookingDateLabel}`;
+
         if (body.action === "decline") {
             const declineNote = body.note?.trim();
 
@@ -42,6 +64,19 @@ export async function PATCH(request: Request) {
                     updated_at: new Date(),
                 },
             });
+
+            try {
+                await sendBookingReviewEmail({
+                    email: booking.user.email,
+                    firstName: booking.user.first_name ?? "there",
+                    status: "REJECTED",
+                    bookingTitle,
+                    bookingDateLabel,
+                    reviewNote: declineNote,
+                });
+            } catch (mailError) {
+                console.error("Failed to send booking decline email", mailError);
+            }
         }
 
         if (body.action === "approve") {
@@ -91,11 +126,23 @@ export async function PATCH(request: Request) {
                     });
                 }
             });
+
+            try {
+                await sendBookingReviewEmail({
+                    email: booking.user.email,
+                    firstName: booking.user.first_name ?? "there",
+                    status: "APPROVED",
+                    bookingTitle,
+                    bookingDateLabel,
+                });
+            } catch (mailError) {
+                console.error("Failed to send booking approval email", mailError);
+            }
         }
 
         revalidatePath("/dashboard/technician");
         revalidatePath("/dashboard/staff");
-        revalidatePath("/dashboard/student/timetable");
+        revalidatePath("/dashboard/student");
 
         return NextResponse.json({ success: true });
     } catch (error) {

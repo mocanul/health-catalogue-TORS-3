@@ -103,3 +103,33 @@ export async function sendForgotPasswordRequest(params: {
     `,
     })
 }
+
+export async function sendBookingReviewEmail(params: {
+    email: string
+    firstName: string
+    status: "APPROVED" | "REJECTED"
+    bookingTitle: string
+    bookingDateLabel: string
+    reviewNote?: string | null
+}) {
+    const { email, firstName, status, bookingTitle, bookingDateLabel, reviewNote } = params
+    const transporter = getTransporter()
+    const isApproved = status === "APPROVED"
+
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to: email,
+        subject: isApproved
+            ? "Your TORS booking has been approved"
+            : "Your TORS booking has been declined",
+        html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <p>Hello ${firstName},</p>
+        <p>Your booking for <strong>${bookingTitle}</strong> on <strong>${bookingDateLabel}</strong> has been ${isApproved ? "approved" : "declined"}.</p>
+        ${!isApproved && reviewNote ? `<p><strong>Technician note:</strong> ${reviewNote}</p>` : ""}
+        <p>You can sign in to TORS to check the latest booking status at any time.</p>
+        ${EMAIL_SIGNATURE}
+      </div>
+    `,
+    })
+}
