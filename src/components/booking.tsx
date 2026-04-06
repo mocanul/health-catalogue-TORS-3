@@ -49,6 +49,8 @@ type Props = {
     isBooking: boolean;
     setIsBooking: (value: boolean) => void;
     onSelectedSlotChange: (slot: SelectedBookingSlot | null) => void;
+    editBooking?: any;
+    onEditComplete?: () => void;
 };
 
 export default function Booking({
@@ -59,6 +61,8 @@ export default function Booking({
     isBooking,
     setIsBooking,
     onSelectedSlotChange,
+    editBooking,
+    onEditComplete,
 }: Props) {
     const [title, setTitle] = useState("");
     const [timeTableOpen, setTimeTableOpen] = useState(false);
@@ -77,6 +81,26 @@ export default function Booking({
     const [otherRequirement, setOtherRequirement] = useState("");
     const [showCancelConfirm, setShowCancelConfirm] = useState(false);
     const [showFinaliseConfirm, setShowFinaliseConfirm] = useState(false);
+
+    const pendingInviteIds = useRef<number[]>([]);
+
+    // Pre-fill form when editBooking is provided
+    useEffect(() => {
+        if (!editBooking) return;
+
+        setIsBooking(true);
+        setTitle(editBooking.lesson ?? "");
+        setOtherRequirement(editBooking.other_requirement ?? "");
+
+        if (editBooking.booking_date && editBooking.room?.name) {
+            onSelectedSlotChange({
+                bookingDate: new Date(editBooking.booking_date).toISOString().split("T")[0],
+                roomName: editBooking.room.name,
+                startTime: editBooking.start_time,
+                endTime: editBooking.end_time,
+            });
+        }
+    }, [editBooking]);
 
     useEffect(() => {
         async function fetchData() {
@@ -101,25 +125,10 @@ export default function Booking({
         fetchData();
     }, []);
 
-    const getInviteIds = () =>
-        selectedContributors
-            .map((c) => c.invite_id)
-            .filter((id): id is number => id !== undefined);
-
-    const attachInvitesToBooking = async (booking_id: number) => {
-        const inviteIds = getInviteIds();
-        if (inviteIds.length === 0) return;
-        await fetch("/api/booking/invite", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ booking_id, invite_ids: inviteIds }),
-        });
-    };
-
     const deleteInvites = async () => {
-        const inviteIds = getInviteIds();
+        const inviteIds = pendingInviteIds.current;
         if (inviteIds.length === 0) return;
-        await fetch(`/api/booking/invite?ids=${inviteIds.join(",")}`, {
+        await fetch(`/api/booking/contributor/invite?ids=${inviteIds.join(",")}`, {
             method: "DELETE",
         });
     };
@@ -136,6 +145,7 @@ export default function Booking({
         setShowContributorSearch(false);
         onSelectedSlotChange(null);
         clearItems();
+        pendingInviteIds.current = [];
     };
 
     const handleDraft = async () => {
@@ -178,42 +188,42 @@ export default function Booking({
             if (!res.ok) throw new Error("Failed to create booking");
             const data = await res.json();
 
-            //send invites for any contributors not yet invited
-            const updatedContributors = await Promise.all(
+            const allInviteIds: number[] = [...pendingInviteIds.current];
+
+            await Promise.all(
                 selectedContributors.map(async (user) => {
-                    if (user.invite_id) return user;
+                    if (user.invite_id) return;
                     const inviteRes = await fetch("/api/booking/contributor/invite", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ sent_to: user.id }),
                     });
-                    if (!inviteRes.ok) return user;
+                    if (!inviteRes.ok) return;
                     const { invite_id } = await inviteRes.json();
-                    return { ...user, invite_id };
+                    allInviteIds.push(invite_id);
                 })
             );
 
-            const inviteIds = updatedContributors
-                .map((c) => c.invite_id)
-                .filter((id): id is number => id !== undefined);
-
-            if (inviteIds.length > 0) {
-                await fetch("/api/booking/invite", {
+            if (allInviteIds.length > 0) {
+                await fetch("/api/booking/contributor/invite", {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ booking_id: data.booking_id, invite_ids: inviteIds }),
+                    body: JSON.stringify({
+                        booking_id: data.booking_id,
+                        invite_ids: allInviteIds,
+                    }),
                 });
             }
 
             resetForm();
-
         } catch {
             setSubmitError("Something went wrong. Please try again.");
         } finally {
             setSubmitting(false);
         }
     };
-    const handleFinalise = async () => {
+
+    const handleSubmit = async () => {
         setSubmitting(true);
         setSubmitError(null);
 
@@ -253,15 +263,93 @@ export default function Booking({
 
             if (!res.ok) throw new Error("Failed to create booking");
             const data = await res.json();
-            await attachInvitesToBooking(data.booking_id);
-            resetForm();
 
+            const allInviteIds: number[] = [...pendingInviteIds.current];
+
+            await Promise.all(
+                selectedContributors.map(async (user) => {
+                    if (user.invite_id) return;
+                    const inviteRes = await fetch("/api/booking/contributor/invite", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ sent_to: user.id }),
+                    });
+                    if (!inviteRes.ok) return;
+                    const { invite_id } = await inviteRes.json();
+                    allInviteIds.push(invite_id);
+                })
+            );
+
+            if (allInviteIds.length > 0) {
+                await fetch("/api/booking/contributor/invite", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        booking_id: data.booking_id,
+                        invite_ids: allInviteIds,
+                    }),
+                });
+            }
+
+            resetForm();
         } catch {
             setSubmitError("Something went wrong. Please try again.");
         } finally {
             setSubmitting(false);
         }
     };
+
+    const handleUpdate = async (status?: string) => {
+        setSubmitting(true);
+        setSubmitError(null);
+
+        try {
+            // Reuse existing path unless a new file was uploaded
+            let hs_form_path = editBooking?.hs_form_path ?? null;
+
+            if (hsFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append("file", hsFile);
+                const uploadRes = await fetch("/api/booking/upload", {
+                    method: "POST",
+                    body: uploadFormData,
+                });
+                if (!uploadRes.ok) throw new Error("Failed to upload file");
+                const uploadData = await uploadRes.json();
+                hs_form_path = uploadData.url;
+            }
+
+            const res = await fetch(`/api/booking/${editBooking.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    lesson: title,
+                    room_name: selectedSlot?.roomName,
+                    booking_date: selectedSlot?.bookingDate,
+                    start_time: selectedSlot?.startTime,
+                    end_time: selectedSlot?.endTime,
+                    other_requirement: otherRequirement,
+                    hs_form_path,
+                    ...(status && { status }),
+                    items: bookingItems.map((item) => ({
+                        id: item.id,
+                        quantity: item.quantity,
+                    })),
+                }),
+            });
+
+            if (!res.ok) throw new Error("Failed to update booking");
+
+            resetForm();
+            onEditComplete?.();
+        } catch {
+            setSubmitError("Something went wrong. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const isEditing = !!editBooking;
 
     return (
         <>
@@ -278,7 +366,7 @@ export default function Booking({
                 ) : (
                     <div className="w-full h-full flex flex-col min-w-0">
                         <h2 className="w-full text-sm font-semibold text-white bg-[#B80050] text-center py-3 shrink-0">
-                            Booking
+                            {isEditing ? "Edit Booking" : "Booking"}
                         </h2>
 
                         <div className="flex flex-col gap-3 p-4 overflow-y-auto flex-1">
@@ -365,10 +453,16 @@ export default function Booking({
                                     rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer
                                     ${hsFile
                                             ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100"
-                                            : "bg-[#B80050] hover:bg-[#9a0044] text-white"
+                                            : isEditing && editBooking?.hs_form_path
+                                                ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                                                : "bg-[#B80050] hover:bg-[#9a0044] text-white"
                                         }`}
                                 >
-                                    {hsFile ? `${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}` : "Attach H&S Form"}
+                                    {hsFile
+                                        ? `${hsFile.name.length > 15 ? hsFile.name.substring(0, 15) + "..." : hsFile.name}`
+                                        : isEditing && editBooking?.hs_form_path
+                                            ? "H&S Form attached ✓"
+                                            : "Attach H&S Form"}
                                 </button>
 
                                 <button
@@ -381,24 +475,30 @@ export default function Booking({
                                 </button>
                             </div>
 
-                            <a href="/forms/HSform.docx"
+                            <a
+                                href="/forms/HSform.docx"
                                 download="Health_and_Safety_Form.docx"
-                                className="text-xs text-blue-500 hover:underline cursor-pointer w-fit -mt-2">
+                                className="text-xs text-blue-500 hover:underline cursor-pointer w-fit -mt-2"
+                            >
                                 Download H&S Form
                             </a>
-
 
                             {showContributorSearch && (
                                 <ContributorSearch
                                     selectedContributors={selectedContributors}
-                                    onAdd={(user) => setSelectedContributors((prev) => {
-                                        if (prev.find((c) => c.id === user.id)) return prev;
-                                        return [...prev, user];
-                                    })}
-                                    onRemove={(id) => setSelectedContributors((prev) => prev.filter((c) => c.id !== id))}
-                                    onUpdate={(user) => setSelectedContributors((prev) =>   // 👈 add this
-                                        prev.map((c) => c.id === user.id ? user : c)
-                                    )}
+                                    onAdd={(user) => {
+                                        if (user.invite_id) {
+                                            pendingInviteIds.current.push(user.invite_id);
+                                        }
+                                        setSelectedContributors((prev) => {
+                                            if (prev.find((c) => c.id === user.id)) return prev;
+                                            return [...prev, user];
+                                        });
+                                    }}
+                                    onRemove={(id) =>
+                                        setSelectedContributors((prev) => prev.filter((c) => c.id !== id))
+                                    }
+                                    onClear={() => setSelectedContributors([])}
                                 />
                             )}
                         </div>
@@ -419,7 +519,11 @@ export default function Booking({
 
                             ) : showCancelConfirm ? (
                                 <div className="flex flex-col gap-2 w-full">
-                                    <p className="text-xs text-gray-500 text-center">Are you sure? Your booking will be lost.</p>
+                                    <p className="text-xs text-gray-500 text-center">
+                                        {isEditing
+                                            ? "Discard your changes?"
+                                            : "Are you sure? Your booking will be lost."}
+                                    </p>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setShowCancelConfirm(false)}
@@ -431,21 +535,26 @@ export default function Booking({
                                         </button>
                                         <button
                                             onClick={async () => {
-                                                await deleteInvites();
+                                                if (!isEditing) await deleteInvites();
                                                 resetForm();
+                                                onEditComplete?.();
                                             }}
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
                                             rounded-lg bg-red-500 hover:bg-red-600 text-white
                                             transition-all cursor-pointer"
                                         >
-                                            Yes, cancel
+                                            {isEditing ? "Discard" : "Yes, cancel"}
                                         </button>
                                     </div>
                                 </div>
 
                             ) : showFinaliseConfirm ? (
                                 <div className="flex flex-col gap-2 w-full">
-                                    <p className="text-xs text-gray-500 text-center">Are you sure you want to submit this booking?</p>
+                                    <p className="text-xs text-gray-500 text-center">
+                                        {isEditing
+                                            ? "Are you sure you want to update this booking?"
+                                            : "Are you sure you want to submit this booking?"}
+                                    </p>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setShowFinaliseConfirm(false)}
@@ -456,12 +565,14 @@ export default function Booking({
                                             Go back
                                         </button>
                                         <button
-                                            onClick={handleFinalise}
+                                            onClick={() =>
+                                                isEditing ? handleUpdate("SUBMITTED") : handleSubmit()
+                                            }
                                             className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
                                             rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white
                                             transition-all cursor-pointer"
                                         >
-                                            Yes, submit
+                                            {isEditing ? "Yes, update" : "Yes, submit"}
                                         </button>
                                     </div>
                                 </div>
@@ -478,12 +589,12 @@ export default function Booking({
                                     </button>
 
                                     <button
-                                        onClick={handleDraft}
+                                        onClick={() => isEditing ? handleUpdate() : handleDraft()}
                                         className="flex-1 flex items-center justify-center text-xs font-medium px-4 py-2.5
                                         rounded-lg border border-[#B80050] text-[#B80050] hover:bg-pink-50
                                         transition-all cursor-pointer"
                                     >
-                                        Draft
+                                        {isEditing ? "Save Draft" : "Draft"}
                                     </button>
 
                                     <button
@@ -496,7 +607,7 @@ export default function Booking({
                                                 setSubmitError("Please select a room, date and time.");
                                                 return;
                                             }
-                                            if (!hsFile) {
+                                            if (!hsFile && !editBooking?.hs_form_path) {
                                                 setSubmitError("Please attach a H&S form before finalising.");
                                                 return;
                                             }
@@ -507,7 +618,7 @@ export default function Booking({
                                         rounded-lg bg-[#B80050] hover:bg-[#9a0044] text-white shadow-sm
                                         hover:shadow-md transition-all cursor-pointer"
                                     >
-                                        Submit
+                                        {isEditing ? "Update" : "Submit"}
                                     </button>
                                 </div>
                             )}

@@ -21,7 +21,7 @@ export async function POST(req: Request) {
         data: {
             sent_by: user.id,
             sent_to,
-            booking_id: null,
+            status: "PENDING"
         },
     });
 
@@ -39,7 +39,6 @@ export async function PATCH(req: Request) {
         where: {
             id: { in: invite_ids },
             sent_by: user.id,
-            booking_id: null,
         },
         data: { booking_id },
     });
