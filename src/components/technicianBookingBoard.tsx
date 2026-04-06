@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { printHtmlContent } from "@/lib/clientPrint";
+import BookingChatButton from "@/components/bookingChatButton";
 
 type StaffOption = {
     id: number;
@@ -37,6 +38,7 @@ type PendingBooking = {
 
 type AssignmentSummary = {
     id: number;
+    bookingId: number;
     title: string;
     lesson: string;
     taskType: string;
@@ -401,6 +403,12 @@ export default function TechnicianBookingBoard({
                                 </div>
 
                                 <div className="flex flex-wrap gap-3">
+                                    <BookingChatButton
+                                        bookingId={booking.id}
+                                        heading={`Booking chat for ${booking.title}`}
+                                        subheading="Message the student directly about this booking."
+                                        buttonLabel="Open chat"
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => reviewBooking(booking.id, "approve")}
@@ -589,6 +597,12 @@ export default function TechnicianBookingBoard({
                         )}
 
                         <div className="mt-6 flex flex-wrap justify-end gap-3">
+                            <BookingChatButton
+                                bookingId={activeBooking.id}
+                                heading={`Booking chat for ${activeBooking.title}`}
+                                subheading="Message the student directly while you review this booking."
+                                buttonLabel="Open chat"
+                            />
                             <button
                                 type="button"
                                 onClick={() => setActiveBooking(null)}
@@ -717,6 +731,12 @@ export default function TechnicianBookingBoard({
                         )}
 
                         <div className="mt-6 flex flex-wrap justify-end gap-3">
+                            <BookingChatButton
+                                bookingId={activeTask.bookingId}
+                                heading={`Booking chat for ${activeTask.title}`}
+                                subheading="Use this chat to coordinate with the student about setup or strip down details."
+                                buttonLabel="Open chat"
+                            />
                             <button
                                 type="button"
                                 onClick={() => setActiveTask(null)}

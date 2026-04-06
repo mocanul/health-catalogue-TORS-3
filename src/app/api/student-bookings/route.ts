@@ -38,11 +38,13 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: "Invalid booking id." }, { status: 400 });
         }
 
-        if (!body.roomId || !body.bookingDate || !body.startTime || !body.endTime) {
+        const { roomId, bookingDate, startTime, endTime } = body;
+
+        if (!roomId || !bookingDate || !startTime || !endTime) {
             return NextResponse.json({ error: "Missing required booking fields." }, { status: 400 });
         }
 
-        if (body.endTime <= body.startTime) {
+        if (endTime <= startTime) {
             return NextResponse.json({ error: "End time must be after the start time." }, { status: 400 });
         }
 
@@ -65,10 +67,10 @@ export async function PATCH(request: Request) {
             await transaction.booking.update({
                 where: { id: bookingId },
                 data: {
-                    room_id: body.roomId,
-                    booking_date: new Date(body.bookingDate),
-                    start_time: body.startTime,
-                    end_time: body.endTime,
+                    room_id: roomId,
+                    booking_date: new Date(bookingDate),
+                    start_time: startTime,
+                    end_time: endTime,
                     lesson: body.lesson?.trim() || null,
                     description: body.otherRequirements?.trim() || null,
                     status: BookingStatus.SUBMITTED,

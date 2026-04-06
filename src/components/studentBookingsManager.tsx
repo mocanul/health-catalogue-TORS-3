@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import BookingChatButton from "@/components/bookingChatButton";
 
 type EquipmentItem = {
     id: number;
@@ -270,17 +271,25 @@ export default function StudentBookingsManager({
                                         </div>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setActiveBooking(buildEditableBooking(booking));
-                                            setConfirmBooking(null);
-                                            setErrorMessage("");
-                                        }}
-                                        className="rounded-md border border-gray-400 bg-white px-4 py-2 font-semibold text-gray-900 transition hover:bg-gray-50"
-                                    >
-                                        Edit booking
-                                    </button>
+                                    <div className="flex flex-wrap gap-3">
+                                        <BookingChatButton
+                                            bookingId={booking.id}
+                                            heading={`Booking chat for ${booking.roomName}`}
+                                            subheading="Message a junior or senior technician here if you have questions about this booking."
+                                            buttonLabel="Message technician"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setActiveBooking(buildEditableBooking(booking));
+                                                setConfirmBooking(null);
+                                                setErrorMessage("");
+                                            }}
+                                            className="rounded-md border border-gray-400 bg-white px-4 py-2 font-semibold text-gray-900 transition hover:bg-gray-50"
+                                        >
+                                            Edit booking
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className={`mt-4 rounded-2xl border px-4 py-4 ${statusCopy.panelClassName}`}>

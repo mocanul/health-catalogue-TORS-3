@@ -5,6 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { validateSession } from "@/lib/auth/session";
 import { BookingStatus } from "@prisma/client";
 
+const visibleStudentStatuses = [
+    BookingStatus.SUBMITTED,
+    BookingStatus.APPROVED,
+    BookingStatus.REJECTED,
+] as const;
+
 export default async function StudentBookingsPage() {
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
@@ -16,11 +22,7 @@ export default async function StudentBookingsPage() {
                 where: {
                     created_by: sessionUser.id,
                     status: {
-                        in: [
-                            BookingStatus.SUBMITTED,
-                            BookingStatus.APPROVED,
-                            BookingStatus.REJECTED,
-                        ],
+                        in: visibleStudentStatuses,
                     },
                 },
                 include: {
@@ -57,7 +59,7 @@ export default async function StudentBookingsPage() {
         endTime: booking.end_time.slice(0, 5),
         lesson: booking.lesson || "",
         otherRequirements: booking.description || "",
-        status: booking.status,
+        status: booking.status as "SUBMITTED" | "APPROVED" | "REJECTED",
         reviewNotes: booking.review_notes,
         equipmentItems: booking.bookingItems.map((item) => ({
             id: item.id,

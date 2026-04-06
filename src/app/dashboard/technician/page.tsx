@@ -165,6 +165,7 @@ export default async function TechnicianDashboard() {
 
     const assignmentCards = assignments.map((assignment) => ({
         id: assignment.id,
+        bookingId: assignment.booking.id,
         title: getBookingTitle(
             assignment.booking.room.name,
             assignment.booking.booking_date,

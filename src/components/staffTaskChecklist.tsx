@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { printHtmlContent } from "@/lib/clientPrint";
 import { createPortal } from "react-dom";
+import BookingChatButton from "@/components/bookingChatButton";
 
 type EquipmentItem = {
     id: number;
@@ -13,6 +14,7 @@ type EquipmentItem = {
 
 type StaffTask = {
     id: number;
+    bookingId: number;
     title: string;
     lesson: string;
     taskType: string;
@@ -206,13 +208,21 @@ export default function StaffTaskChecklist({ tasks }: { tasks: StaffTask[] }) {
                                     {formatTaskType(activeTask.taskType)} · {activeTask.roomName}
                                 </p>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setActiveTask(null)}
-                                className="rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                            >
-                                Close
-                            </button>
+                            <div className="flex flex-wrap gap-3">
+                                <BookingChatButton
+                                    bookingId={activeTask.bookingId}
+                                    heading={`Booking chat for ${activeTask.title}`}
+                                    subheading="Use this chat to coordinate directly with the student about the assigned booking."
+                                    buttonLabel="Open chat"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTask(null)}
+                                    className="rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
 
                         <div className="mt-6 grid gap-6 lg:grid-cols-2">
