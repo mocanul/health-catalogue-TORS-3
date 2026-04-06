@@ -80,7 +80,13 @@ export async function PATCH(
             return NextResponse.json({ error: "Booking not found" }, { status: 404 });
         }
 
-        if (existing.created_by !== user.id && user.role !== "ADMIN") {
+        const isOwner = existing.created_by === user.id;
+        const isAdmin = user.role === "ADMIN";
+        const isContributor = await prisma.bookingInvite.findFirst({
+            where: { booking_id: bookingId, sent_to: user.id, status: "ACCEPTED" },
+        });
+
+        if (!isOwner && !isAdmin && !isContributor) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 

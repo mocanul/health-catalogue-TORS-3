@@ -126,8 +126,8 @@ export default async function Bookings() {
                                         <td className="p-3 text-center">{invite.booking?.start_time.toString()}</td>
                                         <td className="p-3 text-center">{invite.booking?.end_time.toString()}</td>
                                         <td className="p-3 text-center">
-                                            <span className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-full">
-                                                Invited by {invite.sender.first_name} {invite.sender.last_name}
+                                            <span className=" bg-yellow-50 text-yellow-800 border border-yellow-200 px-2 py-0.5 rounded-full">
+                                                INVITE
                                             </span>
                                         </td>
                                         <td className="p-3 text-center">
