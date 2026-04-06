@@ -89,7 +89,7 @@ export default async function TechnicianDashboard() {
             include: {
                 user: true,
                 room: true,
-                bookingDocuments: true,  // was documents
+                bookingDocuments: true,
                 bookingItems: {
                     include: {
                         equipment: true,
@@ -113,7 +113,7 @@ export default async function TechnicianDashboard() {
         }),
         prisma.bookingTask.findMany({
             include: {
-                user: true,  // was assignee
+                user: true,
                 booking: {
                     include: {
                         user: true,
@@ -144,10 +144,10 @@ export default async function TechnicianDashboard() {
             booking.user.email,
         roomName: booking.room.name,
         otherRequirements: booking.description || "No additional notes provided.",
-        documents: booking.bookingDocuments.map((doc) => ({
-            id: doc.id,
-            fileName: doc.file_name,
-            filePath: doc.file_path,
+        documents: booking.bookingDocuments.map((document) => ({
+            id: document.id,
+            fileName: document.file_name,
+            filePath: document.file_path,
         })),
         equipmentItems: booking.bookingItems.map((item) => ({
             id: item.id,
@@ -165,6 +165,7 @@ export default async function TechnicianDashboard() {
 
     const assignmentCards = assignments.map((assignment) => ({
         id: assignment.id,
+        bookingId: assignment.booking.id,
         title: getBookingTitle(
             assignment.booking.room.name,
             assignment.booking.booking_date,
