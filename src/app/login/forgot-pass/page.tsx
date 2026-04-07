@@ -1,63 +1,94 @@
 "use client"
 
-import { useState, KeyboardEvent } from "react"
+import Link from "next/link"
+import { useState } from "react"
 
-export default function AskForEmail() {
+export default function ForgotPassword() {
+    const [email, setEmail] = useState("")
+    const [submitted, setSubmitted] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    //email variable
-    const [email, setEmail] = useState<string>("");
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
 
-    //when user presses enter, store input into email value and send to API
-    async function getEmail(e: KeyboardEvent<HTMLInputElement>) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            const value = e.currentTarget.value;
-            setEmail(value);
+        try {
+            const res = await fetch("/api/auth/forgot-pass", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            })
 
-            try {
-                const response = await fetch("/api/auth/forgot-pass", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email: value })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    console.log("User ID:", data.userId);
-                } else {
-                    console.error("Error:", data.error);
-                }
-            } catch (error) {
-                console.error("Failed to fetch user:", error);
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}))
+                setError(data?.error ?? "Something went wrong. Please try again.")
+                return
             }
+
+            setSubmitted(true)
+        } catch {
+            setError("Network error. Please try again.")
+        } finally {
+            setLoading(false)
         }
     }
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-50 px-4">
-            {email && (
-                <p className="mb-4 font-bold text-green-600"> If account exists, you will receive an email with link to reset password.</p>
-            )}
-            <div className="rounded-xl bg-white p-10 shadow-2xl border">
-                <form>
-                    <h1 className="text-2xl font-bold text-slate-800 mb-8 text-center">
-                        Forgotten Password
-                    </h1>
-                    <div className="flex flex-col">
-                        <label htmlFor="email" className="mb-2 text-sm font-semibold text-slate-700">
-                            Enter email:
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            autoComplete="email"
-                            required
-                            onKeyDown={getEmail}
-                            className="rounded-md border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#B80050] focus:border-[#B80050] transition"
-                        />
-                    </div>
-                </form>
+        <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+            <div className="flex flex-col w-full max-w-md">
+                <Link
+                    href="/login"
+                    className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#B80050] transition"
+                >
+                    ← Back to login
+                </Link>
+
+                <div className="rounded-xl bg-white p-10 shadow-2xl border">
+                    <h1 className="text-2xl font-bold text-slate-800 mb-2 text-center">Reset Password</h1>
+                    <p className="text-sm text-slate-500 text-center mb-8">
+                        Enter your email and we'll send you a reset link.
+                    </p>
+
+                    {submitted ? (
+                        <p className="text-center text-sm font-medium text-green-600 bg-green-50 border border-green-200 rounded-md px-4 py-3">
+                            If an account exists for that email, you'll receive a reset link shortly.
+                        </p>
+                    ) : (
+                        <>
+                            {error && (
+                                <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                    {error}
+                                </div>
+                            )}
+                            <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+                                <div className="flex flex-col">
+                                    <label htmlFor="email" className="mb-2 text-sm font-semibold text-slate-700">
+                                        Email
+                                    </label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        autoComplete="email"
+                                        required
+                                        className="rounded-md border px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#B80050] focus:border-[#B80050] transition"
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="rounded-md bg-[#B80050] py-3 text-white font-semibold hover:bg-pink-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? "Sending..." : "Send Reset Link"}
+                                </button>
+                            </form>
+                        </>
+                    )}
+                </div>
             </div>
-        </div>
+        </main>
     )
 }

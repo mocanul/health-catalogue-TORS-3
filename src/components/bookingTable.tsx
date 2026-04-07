@@ -32,7 +32,7 @@ export default async function Bookings() {
 
     const acceptedInviteBookings = await prisma.booking.findMany({
         where: {
-            invites: {          // ✅ matches schema: invites BookingInvite[]
+            invites: {
                 some: {
                     sent_to: user_id,
                     status: "ACCEPTED",

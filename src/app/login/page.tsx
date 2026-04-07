@@ -149,8 +149,7 @@ export default function Login() {
                         </button>
                     </form>
                     <div className="flex flex-col pt-3">
-                        <a href="/login/request-pass-setup" className="underline text-blue-600 hover:text-purple-700">Request password setup</a>
-                        <a href="/login/forgot-pass" className="underline text-blue-600 hover:text-purple-700">Forgot  Password</a>
+                        <a href="/login/forgot-pass" className="underline text-blue-600 hover:text-purple-700">Reset Password</a>
                     </div>
                 </div>
             </div>

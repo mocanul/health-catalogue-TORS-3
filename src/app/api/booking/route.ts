@@ -33,7 +33,7 @@ export async function POST(req: Request) {
                 room_id: room.id,
                 lesson,
                 other_requirement: other_requirement ?? null,
-                booking_date: new Date(`${booking_date}T00:00:00`),
+                booking_date: new Date(`${booking_date}T00:00:00Z`),
                 start_time,
                 end_time,
                 status: status ?? "DRAFT",
