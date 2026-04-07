@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { printHtmlContent } from "@/lib/clientPrint";
+import BookingChatButton from "@/components/bookingChatButton";
 
 type StaffOption = {
     id: number;
@@ -401,6 +402,12 @@ export default function TechnicianBookingBoard({
                                 </div>
 
                                 <div className="flex flex-wrap gap-3">
+                                    <BookingChatButton
+                                        bookingId={booking.id}
+                                        heading={`Booking chat for ${booking.title}`}
+                                        subheading="Message the student directly here while reviewing this booking."
+                                        buttonLabel="Open chat"
+                                    />
                                     <button
                                         type="button"
                                         onClick={() => reviewBooking(booking.id, "approve")}
@@ -589,6 +596,12 @@ export default function TechnicianBookingBoard({
                         )}
 
                         <div className="mt-6 flex flex-wrap justify-end gap-3">
+                            <BookingChatButton
+                                bookingId={activeBooking.id}
+                                heading={`Booking chat for ${activeBooking.title}`}
+                                subheading="Message the student directly here while reviewing this booking."
+                                buttonLabel="Open chat"
+                            />
                             <button
                                 type="button"
                                 onClick={() => setActiveBooking(null)}

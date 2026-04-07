@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/auth/session";
 import cloudinary from "@/lib/cloudinary";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
+import crypto from "crypto";
+
+function hasCloudinaryConfig() {
+    return Boolean(
+        process.env.CLOUDINARY_CLOUD_NAME &&
+        process.env.CLOUDINARY_API_KEY &&
+        process.env.CLOUDINARY_API_SECRET,
+    );
+}
 
 export async function POST(req: Request) {
     const cookieStore = await cookies();
@@ -21,11 +32,22 @@ export async function POST(req: Request) {
 
     const fileExtension = file.name.split(".").pop();
 
-    const result = await cloudinary.uploader.upload(base64, {
-        folder: "hs_forms",
-        public_id: `user_${user.id}_${Date.now()}.${fileExtension}`,
-        resource_type: "raw",
-    });
+    if (hasCloudinaryConfig()) {
+        const result = await cloudinary.uploader.upload(base64, {
+            folder: "hs_forms",
+            public_id: `user_${user.id}_${Date.now()}.${fileExtension}`,
+            resource_type: "raw",
+        });
 
-    return NextResponse.json({ url: result.secure_url });
+        return NextResponse.json({ url: result.secure_url });
+    }
+
+    const safeExtension = fileExtension?.replace(/[^a-zA-Z0-9]/g, "") || "bin";
+    const fileName = `user_${user.id}_${Date.now()}_${crypto.randomUUID()}.${safeExtension}`;
+    const uploadDirectory = path.join(process.cwd(), "public", "uploads", "hs_forms");
+
+    await mkdir(uploadDirectory, { recursive: true });
+    await writeFile(path.join(uploadDirectory, fileName), buffer);
+
+    return NextResponse.json({ url: `/uploads/hs_forms/${fileName}` });
 }
