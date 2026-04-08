@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getRequestUser } from "@/lib/auth/requestUser";
+import { createAuditLog, getAuditActorName, getRoleLabel } from "@/lib/audit";
 
 export async function GET() {
     try {
@@ -33,6 +35,15 @@ type CreateEquipmentBody = {
 
 export async function POST(request: Request) {
     try {
+        const user = await getRequestUser();
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+        }
+
+        if (!["TECHNICIAN", "ADMIN"].includes(user.role)) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
         const body = (await request.json()) as CreateEquipmentBody;
         const name = body.name?.trim();
         const description = body.description?.trim() ?? "";
@@ -58,15 +69,39 @@ export async function POST(request: Request) {
             );
         }
 
-        const createdEquipment = await prisma.equipment.create({
-            data: {
-                name,
-                description: description || null,
-                category: category || null,
-                cost,
-                quantity_available: quantity,
-                is_active: true,
-            },
+        const createdEquipment = await prisma.$transaction(async (tx) => {
+            const equipment = await tx.equipment.create({
+                data: {
+                    name,
+                    description: description || null,
+                    category: category || null,
+                    cost,
+                    quantity_available: quantity,
+                    is_active: true,
+                },
+            });
+
+            // Audit log is written here when a catalogue item is created.
+            await createAuditLog(
+                {
+                    actor: user,
+                    actionType: "CATALOGUE_CREATED",
+                    actionDescription: `${getRoleLabel(user.role)} ${getAuditActorName(user)} added catalogue item '${equipment.name}'`,
+                    targetType: "CATALOGUE_ITEM",
+                    targetId: equipment.id,
+                    targetName: equipment.name,
+                    newValue: {
+                        name: equipment.name,
+                        description: equipment.description,
+                        category: equipment.category,
+                        cost: equipment.cost,
+                        quantity_available: equipment.quantity_available,
+                    },
+                },
+                tx,
+            );
+
+            return equipment;
         });
 
         return NextResponse.json(createdEquipment, { status: 201 });

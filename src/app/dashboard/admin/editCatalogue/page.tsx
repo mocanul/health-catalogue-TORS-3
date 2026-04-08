@@ -24,6 +24,7 @@ export default async function EditCataloguePage() {
           { href: "/dashboard/admin/bookings", label: "Bookings" },
           { href: "/dashboard/admin/catalogue", label: "Order Catalogue" },
           { href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue", primary: true },
+          { href: "/dashboard/admin/audit-logs", label: "Audit Logs" },
           { href: "/dashboard/admin/users", label: "Users" },
         ]}
       />

@@ -202,6 +202,7 @@ export default async function AdminDashboard() {
                     { href: "/dashboard/admin/bookings", label: "Bookings" },
                     { href: "/dashboard/admin/catalogue", label: "Order Catalogue" },
                     { href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue" },
+                    { href: "/dashboard/admin/audit-logs", label: "Audit Logs" },
                     { href: "/dashboard/admin/users", label: "Users" },
                 ]}
             />

@@ -8,18 +8,26 @@ datasource db {
 }
 
 model AuditLog {
-  id           Int      @id @default(autoincrement())
-  entity_type  String   @db.VarChar(100)
-  entity_id    Int
-  action       String   @db.VarChar(100)
-  performed_by Int
-  old_value    Json?
-  new_value    Json?
-  created_at   DateTime @default(now())
-  user         User     @relation(fields: [performed_by], references: [id], onDelete: Cascade)
+  id                Int      @id @default(autoincrement())
+  user_id           Int      @map("performed_by")
+  user_name         String   @default("") @db.VarChar(255)
+  user_role         UserRole?
+  action_type       String   @map("action") @db.VarChar(100)
+  action_description String  @default("") @db.VarChar(500)
+  target_type       String   @map("entity_type") @db.VarChar(100)
+  target_id         Int      @map("entity_id")
+  target_name       String?  @db.VarChar(255)
+  related_user_name String?  @db.VarChar(255)
+  old_value         Json?
+  new_value         Json?
+  created_at        DateTime @default(now())
+  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@index([entity_type, entity_id])
-  @@index([performed_by])
+  @@index([target_type, target_id])
+  @@index([user_id])
+  @@index([user_role])
+  @@index([action_type])
+  @@index([created_at(sort: Desc)])
 }
 
 model Booking {
@@ -42,6 +50,7 @@ model Booking {
   bookingDocuments  BookingDocument[]
   invites           BookingInvite[]
   bookingItems      BookingItem[]
+  bookingMessages   BookingMessage[]
   bookingTasks      BookingTask[]
 
   @@index([booking_date])
@@ -107,6 +116,20 @@ model BookingTask {
 
   @@index([assigned_to])
   @@index([booking_id])
+}
+
+model BookingMessage {
+  id         Int      @id @default(autoincrement())
+  booking_id Int
+  sender_id  Int
+  message    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  booking    Booking  @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  sender     User     @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([booking_id])
+  @@index([sender_id])
 }
 
 model Equipment {
@@ -193,6 +216,7 @@ model User {
   created_at          DateTime             @default(now())
   passwordHash        String
   auditLogs           AuditLog[]
+  bookingMessages     BookingMessage[]
   bookings            Booking[]
   sentInvites         BookingInvite[]      @relation("InviteSender")
   receivedInvites     BookingInvite[]      @relation("InviteReceiver")
