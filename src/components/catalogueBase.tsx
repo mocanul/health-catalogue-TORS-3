@@ -42,12 +42,25 @@ type Equipment = {
     room: { name: string } | null;
 };
 
+type KitItemDefinition = {
+    name: string;
+    quantity: number;
+    size?: string;
+    aliases?: string[];
+};
+
+type KitDefinition = {
+    name: string;
+    items: KitItemDefinition[];
+};
+
 const TABS = [
     "General Equipment",
     "Airway & Theatre",
     "Imaging & Diagnostics",
     "Emergency & Rehab",
     "Specialist Care",
+    "Kits",
     "Favourites",
 ] as const;
 
@@ -57,8 +70,218 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Imaging & Diagnostics": ["Imaging & Radiotherapy", "Monitoring & Diagnostics"],
     "Emergency & Rehab": ["Emergency & Pre-hospital (Paramedic)", "MSK", "Patient Manoeuvering"],
     "Specialist Care": ["Midwifery", "Mental Health", "Dietetics", "Nutrition & Anthropometry"],
+    "Kits": [],
     "Favourites": [],
 };
+
+const KIT_DEFINITIONS: KitDefinition[] = [
+    {
+        name: "Cannulation Trolley",
+        items: [
+            { name: "3 way tap with extension", quantity: 1, aliases: ["3-way tap", "3 way tap"] },
+            { name: "Alcohol Wipes", quantity: 1, aliases: ["Alchol Wipes"] },
+            { name: "Blunt Fill Needle (Red)", quantity: 1, aliases: ["Blunt Fill Needle"] },
+            { name: "Cannula - 14G", quantity: 1, aliases: ["Cannulas"] },
+            { name: "Cannula - 16G", quantity: 1, aliases: ["Cannulas"] },
+            { name: "Cannula - 17G", quantity: 1, aliases: ["Cannulas"] },
+            { name: "Cannula - 18G", quantity: 1, aliases: ["Cannulas"] },
+            { name: "Cannula - 20G", quantity: 1, aliases: ["Cannulas"] },
+            { name: "Cannula - 24G", quantity: 1, aliases: ["Cannulas"] },
+            { name: "Cannula Dressing", quantity: 1, aliases: ["Cannula dressings"] },
+            { name: "Cotton Wool", quantity: 1 },
+            { name: "Gauze", quantity: 1, aliases: ["Gauze Swab"] },
+            { name: "Needle (Blue 23G)", quantity: 1, aliases: ["Needles"] },
+            { name: "Needle (Green 21G)", quantity: 1, aliases: ["Needles"] },
+            { name: "Needle (Orange 25G)", quantity: 1, aliases: ["Needles"] },
+            { name: "Needle (Yellow 19G)", quantity: 1, aliases: ["Needles"] },
+            { name: "Sample Bottle (Blue)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Sample Bottle (Gold)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Sample Bottle (Pink)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Sample Bottle (Purple)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Sample Bottle (Red)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Sample Bottle (White)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Sample Bottle (Yellow)", quantity: 1, aliases: ["Blood Bottle"] },
+            { name: "Syringe (10ml LeurLock)", quantity: 1, aliases: ["Leur Lock Syringes"] },
+            { name: "Syringe (5ml LeurLock)", quantity: 1, aliases: ["Leur Lock Syringes"] },
+            { name: "Tape", quantity: 1 },
+            { name: "Tourniquets", quantity: 1, aliases: ["Tourniquet"] },
+            { name: "Vacutainer - Needle (Black 22G)", quantity: 1, aliases: ["Blunt Fill Needle"] },
+            { name: "Vacutainer - Needle (Butterfly 21G)", quantity: 1, aliases: ["Butterfly Needle"] },
+            { name: "Vacutainer - Needle (Green 21G)", quantity: 1, aliases: ["Needles"] },
+            { name: "Vacutainer Holder", quantity: 1, aliases: ["Venepuncture Tube"] },
+            { name: "Water (10ml)", quantity: 1, aliases: ["Water Ampule (Sodium Chloride)"] },
+        ],
+    },
+    {
+        name: "Paramedic Red Bag",
+        items: [
+            { name: "Cannulas", quantity: 10, size: "20g" },
+            { name: "Syringes", quantity: 4, size: "10ml", aliases: ["Leur Lock Syringes"] },
+            { name: "Syringes", quantity: 2, size: "2ml", aliases: ["Leur Lock Syringes"] },
+            { name: "Syringe", quantity: 1, size: "1ml", aliases: ["Leur Slip Syringe"] },
+            { name: "Mucosal Atomiser Device (MAD)", quantity: 1 },
+            { name: "Cannula dressings", quantity: 6, aliases: ["Cannula Dressing"] },
+            { name: "Clingfilm", quantity: 1 },
+            { name: "Large ambulance dressings", quantity: 2 },
+            { name: "Triangular bandages", quantity: 2 },
+            { name: "OALES pressure dressing", quantity: 1 },
+            { name: "Blast Dressing", quantity: 1 },
+            { name: "Chest Seal", quantity: 1 },
+            { name: "Trauma Tourniquets", quantity: 2, aliases: ["Tourniquet"] },
+            { name: "Tape", quantity: 1 },
+            { name: "Assortment of dressings", quantity: 1 },
+            { name: "Thomas tube holder", quantity: 1 },
+            { name: "Catheter mount and Filter", quantity: 1 },
+            { name: "High Flow Oxygen Mask", quantity: 1, size: "Adult" },
+            { name: "Heat and moisture exchanging filters (HMEFs)", quantity: 1 },
+            { name: "Supraglottic Airway", quantity: 3 },
+            { name: "Supraglottic Airway", quantity: 4 },
+            { name: "Supraglottic Airway", quantity: 5 },
+            { name: "McGill's forceps", quantity: 1, size: "Adult", aliases: ["Magil Forceps"] },
+            { name: "Ribbon tie", quantity: 1, aliases: ["Ribbon Gauze"] },
+            { name: "Nasopharyngeal Airway (NPA)", quantity: 1, size: "6", aliases: ["Nasopharyngeal Airways"] },
+            { name: "Nasopharyngeal Airway (NPA)", quantity: 1, size: "7", aliases: ["Nasopharyngeal Airways"] },
+            { name: "Oropharyngeal Airway (OPA)", quantity: 1, size: "2", aliases: ["Oropharyngeal Airway"] },
+            { name: "Oropharyngeal Airway (OPA)", quantity: 1, size: "3", aliases: ["Oropharyngeal Airway"] },
+            { name: "Oropharyngeal Airway (OPA)", quantity: 1, size: "4", aliases: ["Oropharyngeal Airway"] },
+            { name: "Cannula", quantity: 1, size: "20g", aliases: ["Cannulas"] },
+            { name: "3-way tap", quantity: 1, aliases: ["3 way tap with extension"] },
+            { name: "Oxygen tubing", quantity: 1 },
+            { name: "Kendrick Traction Device", quantity: 1, size: "Adult" },
+            { name: "Kneck Collar", quantity: 1, size: "Adult", aliases: ["Neck Collar"] },
+            { name: "Pelvic Binder", quantity: 1, size: "Adult" },
+        ],
+    },
+    {
+        name: "Paramedic Green Bag",
+        items: [
+            { name: "High Flow Oxygen Mask", quantity: 1, size: "Adult" },
+            { name: "Nasal Cannula", quantity: 1, size: "Adult", aliases: ["Ported Cannula"] },
+            { name: "Nebuliser Mask", quantity: 1, size: "Adult" },
+            { name: "Venturi/Nebuliser Adaptors", quantity: 1 },
+            { name: "Sharps Bin", quantity: 1 },
+            { name: "Adult Bag, Valve and Mask", quantity: 1, aliases: ["BVM in Bag"] },
+            { name: "Stethoscope", quantity: 1 },
+            { name: "Manual BP kit", quantity: 1, aliases: ["Syhgmonometers"] },
+            { name: "Sphygmomanometer", quantity: 1, aliases: ["Syhgmonometers"] },
+            { name: "Blood glucose monitor", quantity: 1 },
+            { name: "Thermometer", quantity: 1 },
+            { name: "Cannulas", quantity: 10, size: "20g" },
+            { name: "Syringes", quantity: 4, size: "10ml", aliases: ["Leur Lock Syringes"] },
+            { name: "Syringes", quantity: 2, size: "2ml", aliases: ["Leur Lock Syringes"] },
+            { name: "Syringe", quantity: 1, size: "1ml", aliases: ["Leur Slip Syringe"] },
+            { name: "Mucosal Atomiser Device (MAD)", quantity: 1 },
+            { name: "Cannula dressings", quantity: 6, aliases: ["Cannula Dressing"] },
+            { name: "Tourniquet", quantity: 1 },
+            { name: "Infusion sets", quantity: 2 },
+            { name: "Sodium chloride bag", quantity: 1, aliases: ["NaCl"] },
+            { name: "Glucose bag", quantity: 1 },
+            { name: "Adrenaline 1:10,000", quantity: 1, aliases: ["Adrenaline"] },
+            { name: "Amiodarone", quantity: 2 },
+            { name: "McGill's forceps", quantity: 1, size: "Adult", aliases: ["Magil Forceps"] },
+            { name: "Thomas tube holder", quantity: 1 },
+            { name: "Catheter mount and Filter", quantity: 1 },
+            { name: "Laryngoscope handle and blade", quantity: 4, aliases: ["Laryngoscope"] },
+            { name: "Ribbon tie", quantity: 1, aliases: ["Ribbon Gauze"] },
+            { name: "Nasopharyngeal Airway (NPA)", quantity: 1, size: "6", aliases: ["Nasopharyngeal Airways"] },
+            { name: "Nasopharyngeal Airway (NPA)", quantity: 1, size: "7", aliases: ["Nasopharyngeal Airways"] },
+            { name: "Supraglottic Airway", quantity: 1, size: "3" },
+            { name: "Supraglottic Airway", quantity: 1, size: "4" },
+            { name: "Supraglottic Airway", quantity: 1, size: "5" },
+            { name: "EZ-IO Kit", quantity: 1, aliases: ["EZ-IO Kit Bag"] },
+        ],
+    },
+    {
+        name: "EZ-IO Kit Bag",
+        items: [
+            { name: "intraosseous (IO) Needle", quantity: 2, size: "45mm", aliases: ["IO Gun"] },
+            { name: "Dressing stabiliser", quantity: 2 },
+            { name: "Syringe", quantity: 1, size: "20ml", aliases: ["Leur Slip Syringe"] },
+            { name: "3-way tap", quantity: 1, aliases: ["3 way tap with extension"] },
+            { name: "Cut out of sponge", quantity: 1 },
+            { name: "intraosseous (IO) Gun", quantity: 1, aliases: ["IO Gun"] },
+            { name: "Extension catheter", quantity: 1, aliases: ["Extension"] },
+            { name: "Humerus Bone", quantity: 1 },
+            { name: "Tibia bone", quantity: 1, aliases: ["Tibia Bone"] },
+        ],
+    },
+    {
+        name: "Vital Signs Trolleys",
+        items: [
+            { name: "Syhgmonometers", quantity: 1, aliases: ["Sphygmomanometer"] },
+            { name: "Automatic BP monitor", quantity: 1 },
+            { name: "Pen Tourch", quantity: 1, aliases: ["Pen Torch"] },
+            { name: "Stephoscopes", quantity: 1, aliases: ["Stethoscope"] },
+            { name: "Measuring Tape", quantity: 1 },
+        ],
+    },
+    {
+        name: "Additional Kit",
+        items: [
+            { name: "BVM in Bag", quantity: 1, aliases: ["Adult Bag, Valve and Mask"] },
+            { name: "Defib", quantity: 1 },
+            { name: "Suction Unit +Yankauer +Tubing (Ready to go)", quantity: 1 },
+            { name: "Leur Slip Syringe", quantity: 1, size: "20ml" },
+            { name: "Endotracheal Tube (ETT)", quantity: 1 },
+            { name: "Supraglottic Airway", quantity: 1, size: "4 & 5" },
+            { name: "Laryngoscope with sizes 3 & 4 blades", quantity: 1, aliases: ["Laryngoscope"] },
+            { name: "Magil Forceps", quantity: 1, aliases: ["McGill's forceps"] },
+            { name: "Nasopharyngeal Airways", quantity: 1, size: "6 & 7", aliases: ["Nasopharyngeal Airway (NPA)"] },
+            { name: "Oropharyngeal Airway", quantity: 1, size: "2, 3 & 4", aliases: ["Oropharyngeal Airway (OPA)"] },
+            { name: "Ribbon Gauze", quantity: 1, aliases: ["Ribbon tie"] },
+            { name: "ETCO2 Monitor", quantity: 1 },
+            { name: "Defib Pads", quantity: 1 },
+            { name: "Gloves", quantity: 1, size: "S, M & L" },
+            { name: "Mapleson Breathing System", quantity: 1 },
+            { name: "Non-Rebreath Mask", quantity: 1 },
+            { name: "Razor", quantity: 1 },
+            { name: "Stethoscope", quantity: 1 },
+            { name: "Tuft Cut Scissors", quantity: 1 },
+            { name: "Water Ampule (Sodium Chloride)", quantity: 1, size: "10ml" },
+            { name: "3 way tap", quantity: 1, aliases: ["3-way tap"] },
+            { name: "Alcohol Wipes", quantity: 1 },
+            { name: "Arterial Blood Gas Syringe", quantity: 1 },
+            { name: "Blood Bottle", quantity: 1, size: "Red, Pink, Purple, Blue, Gold" },
+            { name: "Blunt Fill Needle", quantity: 1 },
+            { name: "Butterfly Needle", quantity: 1 },
+            { name: "Extension", quantity: 1 },
+            { name: "Gauze Swab", quantity: 1, aliases: ["Gauze"] },
+            { name: "IV Dressing", quantity: 1 },
+            { name: "Leur Lock Syringes", quantity: 1, size: "2ml, 10ml & 20ml" },
+            { name: "Needles", quantity: 1, size: "Green & Orange" },
+            { name: "Ported Cannula", quantity: 1, size: "Green, Grey & Pink" },
+            { name: "Tape", quantity: 1 },
+            { name: "Tourniquet", quantity: 1 },
+            { name: "Venepuncture Tube", quantity: 1 },
+            { name: "IO Gun", quantity: 1, aliases: ["intraosseous (IO) Gun"] },
+            { name: "Drugs Box", quantity: 1 },
+            { name: "Fluids Box", quantity: 1 },
+            { name: "Anaphylaxis & Oversedation Box", quantity: 1 },
+            { name: "Adrenaline", quantity: 1, size: "1mg in 10ml" },
+            { name: "Amiodarone", quantity: 1, size: "150mg in 10ml" },
+            { name: "Atropine", quantity: 1, size: "1mg in 5ml" },
+            { name: "Calcium Chloride", quantity: 1, size: "10% in 10ml" },
+            { name: "Adrenaline", quantity: 1, size: "1:1000 1mg in 1ml" },
+            { name: "Hydrocortisone", quantity: 1, size: "100mg" },
+            { name: "Flumazenil", quantity: 1, size: "500micrograms in 5ml" },
+            { name: "Chlorphenamine Maleate", quantity: 1, size: "10mg in 1ml" },
+            { name: "Naloxone", quantity: 1, size: "400micrograms in 5ml" },
+            { name: "Blunt Fill Needle", quantity: 1 },
+            { name: "Wide-Bore Giving Sets", quantity: 1 },
+            { name: "NaCl", quantity: 1, size: "500ml", aliases: ["Sodium chloride bag"] },
+            { name: "Hartmanns Solution", quantity: 1, size: "500ml" },
+        ],
+    },
+];
+
+function normaliseCatalogueName(value: string) {
+    return value
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[()'",.+/:-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 
 export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -68,6 +291,7 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
     const [activeTab, setActiveTab] = useState<string>("General Equipment");
     const [search, setSearch] = useState("");
     const [favourites, setFavourites] = useState<Set<number>>(new Set());
+    const [expandedKits, setExpandedKits] = useState<Set<string>>(new Set([KIT_DEFINITIONS[0].name]));
 
     useEffect(() => {
         fetch("/api/equipment")
@@ -97,6 +321,19 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
         const matchesTab = TAB_CATEGORIES[activeTab]?.includes(item.category ?? "");
         const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
         return matchesTab && matchesSearch;
+    });
+
+    const filteredKits = KIT_DEFINITIONS.filter((kit) => {
+        const term = search.trim().toLowerCase();
+        if (!term) return true;
+
+        const matchesKitName = kit.name.toLowerCase().includes(term);
+        const matchesItem = kit.items.some((item) => {
+            const fields = [item.name, item.size ?? "", ...(item.aliases ?? [])];
+            return fields.some((field) => field.toLowerCase().includes(term));
+        });
+
+        return matchesKitName || matchesItem;
     });
 
     const toggleFavourite = async (id: number) => {
@@ -131,7 +368,7 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
         }
     };
 
-    const handleAddClick = (item: Equipment) => {
+    const ensureBookingSlot = () => {
         const hasBookingSlot =
             selectedSlot &&
             selectedSlot.roomName &&
@@ -141,23 +378,112 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
 
         if (!hasBookingSlot) {
             setErrorMessage("Please select room, date and time before adding items to booking.");
+            return false;
+        }
+
+        return true;
+    };
+
+    const canUseEquipmentForSelectedSlot = (item: Equipment) => {
+        if (item.fixed_room_id !== null) {
+            const fixedRoomName = item.room?.name ?? "a specific room";
+            if (selectedSlot?.roomName !== fixedRoomName) {
+                return `This item can only be used in ${fixedRoomName}. Please select that room to book this item.`;
+            }
+        }
+
+        return null;
+    };
+
+    const handleAddClick = (item: Equipment, quantity = 1) => {
+        if (!ensureBookingSlot()) {
             return;
         }
 
-        if (item.fixed_room_id !== null) {
-            const fixedRoomName = item.room?.name ?? "a specific room";
-            if (selectedSlot.roomName !== fixedRoomName) {
-                setErrorMessage(`This item can only be used in ${fixedRoomName}. Please select that room to book this item.`);
-                return;
-            }
+        const validationError = canUseEquipmentForSelectedSlot(item);
+        if (validationError) {
+            setErrorMessage(validationError);
+            return;
         }
 
         onAddItem?.({
             id: item.id,
             name: item.name,
-            quantity: 1,
+            quantity,
             fixed_room_id: item.fixed_room_id,
         });
+    };
+
+    const toggleKit = (kitName: string) => {
+        setExpandedKits((prev) => {
+            const next = new Set(prev);
+            if (next.has(kitName)) {
+                next.delete(kitName);
+            } else {
+                next.add(kitName);
+            }
+            return next;
+        });
+    };
+
+    const findEquipmentForKitItem = (kitItem: KitItemDefinition) => {
+        const searchTerms = [kitItem.name, ...(kitItem.aliases ?? [])].map(normaliseCatalogueName);
+
+        return equipment.find((item) => {
+            const equipmentName = normaliseCatalogueName(item.name);
+            return searchTerms.some((term) => equipmentName === term || equipmentName.includes(term) || term.includes(equipmentName));
+        }) ?? null;
+    };
+
+    const handleAddKitItem = (kitItem: KitItemDefinition) => {
+        const matchedEquipment = findEquipmentForKitItem(kitItem);
+        if (!matchedEquipment) {
+            setErrorMessage(`${kitItem.name} is not currently available in the catalogue.`);
+            return;
+        }
+
+        handleAddClick(matchedEquipment, kitItem.quantity);
+    };
+
+    const handleAddFullKit = (kit: KitDefinition) => {
+        if (!ensureBookingSlot()) {
+            return;
+        }
+
+        const missingItems: string[] = [];
+        const roomRestrictedItems: string[] = [];
+
+        for (const kitItem of kit.items) {
+            const matchedEquipment = findEquipmentForKitItem(kitItem);
+            if (!matchedEquipment) {
+                missingItems.push(kitItem.name);
+                continue;
+            }
+
+            const validationError = canUseEquipmentForSelectedSlot(matchedEquipment);
+            if (validationError) {
+                roomRestrictedItems.push(kitItem.name);
+                continue;
+            }
+
+            onAddItem?.({
+                id: matchedEquipment.id,
+                name: matchedEquipment.name,
+                quantity: kitItem.quantity,
+                fixed_room_id: matchedEquipment.fixed_room_id,
+            });
+        }
+
+        if (missingItems.length > 0 || roomRestrictedItems.length > 0) {
+            const messages: string[] = [];
+            if (missingItems.length > 0) {
+                messages.push(`These kit items were not found in the catalogue: ${missingItems.join(", ")}.`);
+            }
+            if (roomRestrictedItems.length > 0) {
+                messages.push(`These kit items were skipped because they belong to a different fixed room: ${roomRestrictedItems.join(", ")}.`);
+            }
+            setErrorMessage(messages.join(" "));
+        }
     };
 
     return (
@@ -206,6 +532,87 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                     <div className="py-16 text-center text-gray-400 text-sm">Loading equipment...</div>
                 ) : error ? (
                     <div className="py-16 text-center text-red-400 text-sm">{error}</div>
+                ) : activeTab === "Kits" ? (
+                    <div className="max-h-170 overflow-y-auto px-4 py-4 space-y-4">
+                        {filteredKits.length > 0 ? (
+                            filteredKits.map((kit) => {
+                                const isExpanded = expandedKits.has(kit.name);
+
+                                return (
+                                    <div key={kit.name} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                                        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleKit(kit.name)}
+                                                className="flex min-w-0 items-center gap-3 text-left cursor-pointer"
+                                            >
+                                                <span className="text-sm text-gray-500">{isExpanded ? "▾" : "▸"}</span>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-gray-900">{kit.name}</p>
+                                                    <p className="text-xs text-gray-500">{kit.items.length} items</p>
+                                                </div>
+                                            </button>
+
+                                            {isBooking ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAddFullKit(kit)}
+                                                    className="shrink-0 bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                                                >
+                                                    Add full kit
+                                                </button>
+                                            ) : null}
+                                        </div>
+
+                                        {isExpanded ? (
+                                            <div className="divide-y divide-gray-100">
+                                                {kit.items.map((kitItem, index) => {
+                                                    const matchedEquipment = findEquipmentForKitItem(kitItem);
+
+                                                    return (
+                                                        <div
+                                                            key={`${kit.name}-${kitItem.name}-${index}`}
+                                                            className="grid grid-cols-[minmax(0,2fr)_120px_100px_140px] gap-4 items-center px-4 py-3"
+                                                        >
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 truncate">{kitItem.name}</p>
+                                                                {!matchedEquipment ? (
+                                                                    <p className="mt-1 text-xs text-amber-600">Not matched to catalogue equipment</p>
+                                                                ) : null}
+                                                            </div>
+
+                                                            <p className="text-xs text-gray-500">{kitItem.size ?? "—"}</p>
+                                                            <p className="text-xs text-gray-700">x {kitItem.quantity}</p>
+
+                                                            <div className="flex justify-end">
+                                                                {isBooking ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        disabled={!matchedEquipment}
+                                                                        onClick={() => handleAddKitItem(kitItem)}
+                                                                        className={`text-xs font-medium px-4 py-1.5 rounded transition-colors ${matchedEquipment
+                                                                            ? "bg-[#B80050] hover:bg-[#9a0044] text-white cursor-pointer"
+                                                                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                                            }`}
+                                                                    >
+                                                                        Add item
+                                                                    </button>
+                                                                ) : null}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="py-16 text-center text-gray-400 text-sm">
+                                No kits found.
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <>
                         {/* Header row */}

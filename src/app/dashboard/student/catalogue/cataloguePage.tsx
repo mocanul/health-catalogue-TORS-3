@@ -77,7 +77,7 @@ export default function CataloguePage() {
     setBookingItems((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
-        return prev.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i);
       }
       return [...prev, item];
     });
