@@ -42,12 +42,20 @@ type Equipment = {
     room: { name: string } | null;
 };
 
+type RecentBooking = {
+    id: number;
+    bookingDate: string;
+    roomName: string;
+    items: BookingItem[];
+};
+
 const TABS = [
     "General Equipment",
     "Airway & Theatre",
     "Imaging & Diagnostics",
     "Emergency & Rehab",
     "Specialist Care",
+    "Recents",
     "Favourites",
 ] as const;
 
@@ -57,11 +65,13 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Imaging & Diagnostics": ["Imaging & Radiotherapy", "Monitoring & Diagnostics"],
     "Emergency & Rehab": ["Emergency & Pre-hospital (Paramedic)", "MSK", "Patient Manoeuvering"],
     "Specialist Care": ["Midwifery", "Mental Health", "Dietetics", "Nutrition & Anthropometry"],
+    "Recents": [],
     "Favourites": [],
 };
 
 export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
+    const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -92,12 +102,32 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
             .catch(() => { });
     }, []);
 
+    useEffect(() => {
+        fetch("/api/equipment/recents")
+            .then((res) => {
+                if (!res.ok) return;
+                return res.json();
+            })
+            .then((data: RecentBooking[]) => {
+                if (data) setRecentBookings(data);
+            })
+            .catch(() => { });
+    }, []);
+
     const filtered = equipment.filter((item) => {
         if (activeTab === "Favourites") return favourites.has(item.id);
         const matchesTab = TAB_CATEGORIES[activeTab]?.includes(item.category ?? "");
         const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
         return matchesTab && matchesSearch;
     });
+
+    const recentSearch = search.trim().toLowerCase();
+    const filteredRecentBookings = recentBookings
+        .map((booking) => ({
+            ...booking,
+            items: booking.items.filter((item) => item.name.toLowerCase().includes(recentSearch)),
+        }))
+        .filter((booking) => booking.items.length > 0 || recentSearch.length === 0);
 
     const toggleFavourite = async (id: number) => {
         setFavourites((prev) => {
@@ -160,6 +190,27 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
         });
     };
 
+    const handleAddRecentClick = (item: BookingItem) => {
+        handleAddClick({
+            id: item.id,
+            name: item.name,
+            description: null,
+            category: null,
+            quantity_available: 1,
+            is_active: true,
+            created_at: "",
+            fixed_room_id: item.fixed_room_id,
+            room: null,
+        });
+    };
+
+    const formatRecentBookingDate = (value: string) =>
+        new Intl.DateTimeFormat("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        }).format(new Date(value));
+
     return (
         <div className="flex justify-center px-6 py-8 w-[75%]">
             <div className="w-full bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
@@ -206,6 +257,52 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                     <div className="py-16 text-center text-gray-400 text-sm">Loading equipment...</div>
                 ) : error ? (
                     <div className="py-16 text-center text-red-400 text-sm">{error}</div>
+                ) : activeTab === "Recents" ? (
+                    <div className="max-h-170 overflow-y-auto px-4 py-4">
+                        {filteredRecentBookings.length > 0 ? (
+                            <div className="space-y-4">
+                                {filteredRecentBookings.map((booking) => (
+                                    <div key={booking.id} className="rounded-lg border border-gray-200 overflow-hidden">
+                                        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+                                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                                {formatRecentBookingDate(booking.bookingDate)}
+                                            </p>
+                                            <p className="mt-1 text-sm font-medium text-gray-900">{booking.roomName}</p>
+                                        </div>
+
+                                        <div className="divide-y divide-gray-100">
+                                            {booking.items.map((item) => (
+                                                <div
+                                                    key={`${booking.id}-${item.id}`}
+                                                    className="flex items-center justify-between gap-4 px-4 py-3"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                                                        <p className="mt-1 text-xs text-gray-500">Quantity previously booked: {item.quantity}</p>
+                                                    </div>
+
+                                                    {isBooking ? (
+                                                        <button
+                                                            className="shrink-0 bg-[#B80050] hover:bg-[#9a0044] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors cursor-pointer"
+                                                            onClick={() => handleAddRecentClick(item)}
+                                                        >
+                                                            Add Item
+                                                        </button>
+                                                    ) : null}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-16 text-center text-gray-400 text-sm">
+                                {search
+                                    ? "No recent booking equipment matched your search."
+                                    : "Your recent booking equipment will appear here."}
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <>
                         {/* Header row */}
