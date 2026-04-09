@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/auth/session";
+import { createAuditLog, getAuditActorName, getRoleLabel } from "@/lib/audit";
 
 async function getUser() {
     const cookieStore = await cookies();
@@ -109,7 +110,7 @@ export async function PATCH(
                 });
             }
 
-            return tx.booking.update({
+            const updatedBooking = await tx.booking.update({
                 where: { id: bookingId },
                 data: {
                     room_id,
@@ -133,6 +134,43 @@ export async function PATCH(
                     }),
                 },
             });
+
+            // Audit log is written here whenever a booking is updated, including student edits/resubmissions.
+            await createAuditLog(
+                {
+                    actor: user,
+                    actionType: "BOOKING_UPDATED",
+                    actionDescription: `${getRoleLabel(user.role)} ${getAuditActorName(user)} updated booking #${updatedBooking.id}`,
+                    targetType: "BOOKING",
+                    targetId: updatedBooking.id,
+                    targetName: `Booking #${updatedBooking.id}`,
+                    relatedUserName:
+                        isOwner
+                            ? getAuditActorName(user)
+                            : null,
+                    oldValue: {
+                        lesson: existing.lesson,
+                        room_id: existing.room_id,
+                        booking_date: existing.booking_date,
+                        start_time: existing.start_time,
+                        end_time: existing.end_time,
+                        status: existing.status,
+                        hs_form_path: existing.hs_form_path,
+                    },
+                    newValue: {
+                        lesson: updatedBooking.lesson,
+                        room_id: updatedBooking.room_id,
+                        booking_date: updatedBooking.booking_date,
+                        start_time: updatedBooking.start_time,
+                        end_time: updatedBooking.end_time,
+                        status: updatedBooking.status,
+                        hs_form_path: updatedBooking.hs_form_path,
+                    },
+                },
+                tx,
+            );
+
+            return updatedBooking;
         });
 
         return NextResponse.json({ success: true, booking_id: updated.id });

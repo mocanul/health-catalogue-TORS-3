@@ -66,6 +66,7 @@ export default function CataloguePage() {
         { href: "/dashboard/admin/bookings", label: "Bookings" },
         { href: "/dashboard/admin/catalogue", label: "Order Catalogue", primary: true },
         { href: "/dashboard/admin/editCatalogue", label: "Edit Catalogue" },
+        { href: "/dashboard/admin/audit-logs", label: "Audit Logs" },
         { href: "/dashboard/admin/users", label: "Users" }
       ]} />
 
