@@ -44,10 +44,12 @@ export async function POST(request: Request) {
 
         const isStudentOwner =
             sessionUser.role === "STUDENT" && booking.created_by === sessionUser.id;
-        const isTechnicianRole =
-            sessionUser.role === "TECHNICIAN" || sessionUser.role === "STAFF";
+        const isSupportUser =
+            sessionUser.role === "TECHNICIAN" ||
+            sessionUser.role === "STAFF" ||
+            sessionUser.role === "ADMIN";
 
-        if (!isStudentOwner && !isTechnicianRole) {
+        if (!isStudentOwner && !isSupportUser) {
             return NextResponse.json({ error: "Forbidden." }, { status: 403 });
         }
 
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
             where: {
                 is_active: true,
                 role: {
-                    in: ["TECHNICIAN", "STAFF"],
+                    in: ["TECHNICIAN", "STAFF", "ADMIN"],
                 },
             },
             select: {

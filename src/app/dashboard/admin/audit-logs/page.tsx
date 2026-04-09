@@ -19,12 +19,14 @@ const ACTION_OPTIONS = [
     "TASK_UPDATED",
     "BOOKING_CREATED",
     "BOOKING_UPDATED",
+    "BOOKING_RESUBMITTED",
     "BOOKING_APPROVED",
     "BOOKING_DENIED",
     "CATALOGUE_CREATED",
     "CATALOGUE_UPDATED",
     "CATALOGUE_STOCK_UPDATED",
     "CATALOGUE_DELETED",
+    "CHAT_MESSAGE_SENT",
 ] as const;
 
 function formatDateTime(value: Date) {
@@ -160,7 +162,7 @@ export default async function AuditLogsPage({ searchParams }: AuditLogPageProps)
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
                                 <p className="mt-2 text-gray-600">
-                                    Read-only system activity for staff, technicians, and admins. Newest records appear first.
+                                    Read-only system activity for students, staff, technicians, and admins. Newest records appear first.
                                 </p>
                             </div>
                         </div>
@@ -265,3 +267,4 @@ export default async function AuditLogsPage({ searchParams }: AuditLogPageProps)
         </div>
     );
 }
+

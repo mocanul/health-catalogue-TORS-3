@@ -292,6 +292,14 @@ function normaliseCatalogueName(value: string) {
         .trim();
 }
 
+function formatRecentBookingDate(value: string) {
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    }).format(new Date(value));
+}
+
 export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
     const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
@@ -554,6 +562,69 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
                     <div className="py-16 text-center text-gray-400 text-sm">Loading equipment...</div>
                 ) : error ? (
                     <div className="py-16 text-center text-red-400 text-sm">{error}</div>
+                ) : activeTab === "Recents" ? (
+                    <div className="max-h-170 overflow-y-auto px-4 py-4 space-y-4">
+                        {recentBookings.length > 0 ? (
+                            recentBookings.map((booking) => (
+                                <div
+                                    key={booking.id}
+                                    className="rounded-lg border border-gray-200 bg-white overflow-hidden"
+                                >
+                                    <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200 bg-gray-50">
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-900">
+                                                {formatRecentBookingDate(booking.bookingDate)}
+                                            </p>
+                                            <p className="text-xs text-gray-500">{booking.roomName}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="divide-y divide-gray-100">
+                                        {booking.items.map((item) => {
+                                            const matchedEquipment = equipment.find((equipmentItem) => equipmentItem.id === item.id);
+
+                                            return (
+                                                <div
+                                                    key={`${booking.id}-${item.id}`}
+                                                    className="grid grid-cols-[minmax(0,2fr)_100px_140px] gap-4 items-center px-4 py-3"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                                                    </div>
+
+                                                    <p className="text-xs text-gray-700">x {item.quantity}</p>
+
+                                                    <div className="flex justify-end">
+                                                        {isBooking ? (
+                                                            <button
+                                                                type="button"
+                                                                disabled={!matchedEquipment}
+                                                                onClick={() => {
+                                                                    if (matchedEquipment) {
+                                                                        handleAddClick(matchedEquipment, item.quantity);
+                                                                    }
+                                                                }}
+                                                                className={`text-xs font-medium px-4 py-1.5 rounded transition-colors ${matchedEquipment
+                                                                    ? "bg-[#B80050] hover:bg-[#9a0044] text-white cursor-pointer"
+                                                                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                                                    }`}
+                                                            >
+                                                                Add item
+                                                            </button>
+                                                        ) : null}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-16 text-center text-gray-400 text-sm">
+                                No recent approved bookings found.
+                            </div>
+                        )}
+                    </div>
                 ) : activeTab === "Kits" ? (
                     <div className="max-h-170 overflow-y-auto px-4 py-4 space-y-4">
                         {filteredKits.length > 0 ? (

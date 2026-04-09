@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { validateSession } from "@/lib/auth/session";
+import { BookingStatus } from "@prisma/client";
 
 async function getUser() {
     const cookieStore = await cookies();
@@ -17,6 +18,9 @@ export async function GET() {
     const bookings = await prisma.booking.findMany({
         where: {
             created_by: user.id,
+            status: {
+                in: [BookingStatus.APPROVED, BookingStatus.COMPLETED],
+            },
             bookingItems: {
                 some: {},
             },

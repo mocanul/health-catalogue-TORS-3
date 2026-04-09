@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { BookingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { validateSession } from "@/lib/auth/session";
+import { createAuditLog, getAuditActorName, getRoleLabel } from "@/lib/audit";
 
 type BookingItemInput = {
     equipmentId?: number;
@@ -50,6 +51,13 @@ export async function PATCH(request: Request) {
 
         const booking = await prisma.booking.findUnique({
             where: { id: bookingId },
+            include: {
+                room: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
         });
 
         if (!booking || booking.created_by !== sessionUser.id) {
@@ -64,7 +72,7 @@ export async function PATCH(request: Request) {
             .filter((item) => !Number.isNaN(item.equipmentId) && !Number.isNaN(item.quantity) && item.quantity > 0);
 
         await prisma.$transaction(async (transaction) => {
-            await transaction.booking.update({
+            const updatedBooking = await transaction.booking.update({
                 where: { id: bookingId },
                 data: {
                     room_id: roomId,
@@ -96,6 +104,46 @@ export async function PATCH(request: Request) {
                     })),
                 });
             }
+
+            const updatedRoom = await transaction.room.findUnique({
+                where: { id: roomId },
+                select: { name: true },
+            });
+
+            // Audit log is written here whenever a student edits and resubmits a booking.
+            await createAuditLog(
+                {
+                    actor: sessionUser,
+                    actionType: "BOOKING_RESUBMITTED",
+                    actionDescription: `${getRoleLabel(sessionUser.role)} ${getAuditActorName(sessionUser)} resubmitted booking #${bookingId}`,
+                    targetType: "BOOKING",
+                    targetId: bookingId,
+                    targetName: updatedRoom?.name
+                        ? `${updatedRoom.name} booking`
+                        : `Booking #${bookingId}`,
+                    relatedUserName: getAuditActorName(sessionUser),
+                    oldValue: {
+                        room_id: booking.room_id,
+                        room_name: booking.room?.name ?? null,
+                        booking_date: booking.booking_date,
+                        start_time: booking.start_time,
+                        end_time: booking.end_time,
+                        lesson: booking.lesson,
+                        status: booking.status,
+                        review_notes: booking.review_notes,
+                    },
+                    newValue: {
+                        room_id: updatedBooking.room_id,
+                        room_name: updatedRoom?.name ?? null,
+                        booking_date: updatedBooking.booking_date,
+                        start_time: updatedBooking.start_time,
+                        end_time: updatedBooking.end_time,
+                        lesson: updatedBooking.lesson,
+                        status: updatedBooking.status,
+                    },
+                },
+                transaction,
+            );
         });
 
         revalidatePath("/dashboard/student/bookings");
@@ -111,3 +159,6 @@ export async function PATCH(request: Request) {
         );
     }
 }
+
+
+

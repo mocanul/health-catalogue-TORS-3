@@ -9,18 +9,18 @@ datasource db {
 
 model AuditLog {
   id                 Int       @id @default(autoincrement())
-  user_id            Int       @map("performed_by")
-  user_name          String    @default("") @db.VarChar(255)
-  user_role          UserRole?
-  action_type        String    @map("action") @db.VarChar(100)
-  action_description String    @default("") @db.VarChar(500)
   target_type        String    @map("entity_type") @db.VarChar(100)
   target_id          Int       @map("entity_id")
-  target_name        String?   @db.VarChar(255)
-  related_user_name  String?   @db.VarChar(255)
+  action_type        String    @map("action") @db.VarChar(100)
+  user_id            Int       @map("performed_by")
   old_value          Json?
   new_value          Json?
   created_at         DateTime  @default(now())
+  action_description String    @default("") @db.VarChar(500)
+  related_user_name  String?   @db.VarChar(255)
+  target_name        String?   @db.VarChar(255)
+  user_name          String    @default("") @db.VarChar(255)
+  user_role          UserRole?
   user               User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([target_type, target_id])

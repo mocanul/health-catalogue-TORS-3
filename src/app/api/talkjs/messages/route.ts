@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { validateSession } from "@/lib/auth/session";
+import { createAuditLog, getAuditActorName, getRoleLabel } from "@/lib/audit";
 import {
     getTalkJsAppId,
     talkJsApiFetch,
@@ -37,7 +38,9 @@ async function getChatContext(sessionUser: NonNullable<SessionUser>, bookingId: 
     const isStudentOwner =
         sessionUser.role === "STUDENT" && booking.created_by === sessionUser.id;
     const isSupportUser =
-        sessionUser.role === "TECHNICIAN" || sessionUser.role === "STAFF";
+        sessionUser.role === "TECHNICIAN" ||
+        sessionUser.role === "STAFF" ||
+        sessionUser.role === "ADMIN";
 
     if (!isStudentOwner && !isSupportUser) {
         return { error: NextResponse.json({ error: "Forbidden." }, { status: 403 }) };
@@ -47,7 +50,7 @@ async function getChatContext(sessionUser: NonNullable<SessionUser>, bookingId: 
         where: {
             is_active: true,
             role: {
-                in: ["TECHNICIAN", "STAFF"],
+                in: ["TECHNICIAN", "STAFF", "ADMIN"],
             },
         },
         select: {
@@ -167,9 +170,28 @@ export async function POST(request: Request) {
             ]),
         });
 
+
+        await createAuditLog({
+            actor: sessionUser,
+            actionType: "CHAT_MESSAGE_SENT",
+            actionDescription: `${getRoleLabel(sessionUser.role)} ${getAuditActorName(sessionUser)} sent a chat message for booking #${context.booking.id}`,
+            targetType: "CHAT",
+            targetId: context.booking.id,
+            targetName: `Booking #${context.booking.id} chat`,
+            relatedUserName:
+                sessionUser.role === "STUDENT"
+                    ? "Technician team"
+                    : `${context.booking.user.first_name ?? ""} ${context.booking.user.last_name ?? ""}`.trim() || context.booking.user.email,
+            newValue: {
+                text,
+            },
+        });
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: "Failed to send booking chat message." }, { status: 500 });
     }
 }
+
+
+
