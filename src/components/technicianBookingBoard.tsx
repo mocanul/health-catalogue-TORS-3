@@ -38,6 +38,7 @@ type PendingBooking = {
 
 type AssignmentSummary = {
     id: number;
+    bookingId: number;
     title: string;
     lesson: string;
     taskType: string;
@@ -405,7 +406,7 @@ export default function TechnicianBookingBoard({
                                     <BookingChatButton
                                         bookingId={booking.id}
                                         heading={`Booking chat for ${booking.title}`}
-                                        subheading="Message the student directly here while reviewing this booking."
+                                        subheading="Message the student directly about this booking."
                                         buttonLabel="Open chat"
                                     />
                                     <button
@@ -599,7 +600,7 @@ export default function TechnicianBookingBoard({
                             <BookingChatButton
                                 bookingId={activeBooking.id}
                                 heading={`Booking chat for ${activeBooking.title}`}
-                                subheading="Message the student directly here while reviewing this booking."
+                                subheading="Message the student directly while you review this booking."
                                 buttonLabel="Open chat"
                             />
                             <button
@@ -730,6 +731,12 @@ export default function TechnicianBookingBoard({
                         )}
 
                         <div className="mt-6 flex flex-wrap justify-end gap-3">
+                            <BookingChatButton
+                                bookingId={activeTask.bookingId}
+                                heading={`Booking chat for ${activeTask.title}`}
+                                subheading="Use this chat to coordinate with the student about setup or strip down details."
+                                buttonLabel="Open chat"
+                            />
                             <button
                                 type="button"
                                 onClick={() => setActiveTask(null)}

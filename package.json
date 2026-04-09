@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
+    "@talkjs/core": "^1.9.0",
+    "@talkjs/react-components": "^0.1.8",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
     "crypto": "^1.0.1",
