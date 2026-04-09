@@ -1,62 +1,94 @@
-"use server"
+"use server";
 
 import { prisma } from "@/lib/prisma";
-import { validateSession } from "@/lib/auth/session"
-import { cookies } from "next/headers"
+import { validateSession } from "@/lib/auth/session";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import ViewBookingButton from "@/components/modals/viewBookingButton";
 import AcceptDeclineButtons from "./modals/acceptDeclineButtons";
+import BookingChatButton from "@/components/bookingChatButton";
+
+function formatDateLabel(date: Date) {
+    return new Intl.DateTimeFormat("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    }).format(date);
+}
+
+function formatStatusLabel(status: string) {
+    return status.replace(/_/g, " ").toLowerCase().replace(/^\w/, (letter) => letter.toUpperCase());
+}
+
+function getStatusClasses(status: string) {
+    if (status === "APPROVED") {
+        return "border-green-200 bg-green-50 text-green-700";
+    }
+
+    if (status === "REJECTED") {
+        return "border-red-200 bg-red-50 text-red-700";
+    }
+
+    if (status === "SUBMITTED") {
+        return "border-amber-200 bg-amber-50 text-amber-700";
+    }
+
+    return "border-slate-200 bg-slate-50 text-slate-700";
+}
 
 export default async function Bookings() {
-    const cookieStore = await cookies()
-    const sessionToken = cookieStore.get("session")?.value
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session")?.value;
 
-    if (!sessionToken) redirect("/login")
+    if (!sessionToken) {
+        redirect("/login");
+    }
 
-    const user = await validateSession(sessionToken)
-    if (!user) redirect("/login")
+    const user = await validateSession(sessionToken);
 
-    const user_id = user.id
-    const user_role = user.role
+    if (!user) {
+        redirect("/login");
+    }
 
-    // Fetch own bookings
+    const userId = user.id;
+    const userRole = user.role;
+
     const ownBookings = await prisma.booking.findMany({
-        where: user_role === "STUDENT" ? { created_by: user_id } : {},
+        where: userRole === "STUDENT" ? { created_by: userId } : {},
         include: {
             user: { select: { first_name: true, last_name: true, email: true } },
             room: { select: { name: true } },
-            bookingItems: { include: { equipment: true } }
+            bookingItems: { include: { equipment: true } },
         },
-        orderBy: [{ booking_date: "asc" }, { start_time: "asc" }]
+        orderBy: [{ booking_date: "asc" }, { start_time: "asc" }],
     });
 
     const acceptedInviteBookings = await prisma.booking.findMany({
         where: {
             invites: {
                 some: {
-                    sent_to: user_id,
+                    sent_to: userId,
                     status: "ACCEPTED",
-                }
-            }
+                },
+            },
         },
         include: {
             user: { select: { first_name: true, last_name: true, email: true } },
             room: { select: { name: true } },
-            bookingItems: { include: { equipment: true } }
+            bookingItems: { include: { equipment: true } },
         },
-        orderBy: [{ booking_date: "asc" }, { start_time: "asc" }]
+        orderBy: [{ booking_date: "asc" }, { start_time: "asc" }],
     });
 
-    // Merge, avoiding duplicates (edge case: owner who also has an invite)
     const allBookings = [
         ...ownBookings,
-        ...acceptedInviteBookings.filter(b => !ownBookings.some(o => o.id === b.id))
+        ...acceptedInviteBookings.filter((booking) => !ownBookings.some((ownBooking) => ownBooking.id === booking.id)),
     ];
 
-    // Fetch pending invites for this user
     const pendingInvites = await prisma.bookingInvite.findMany({
         where: {
-            sent_to: user_id,
+            sent_to: userId,
             status: "PENDING",
         },
         include: {
@@ -64,81 +96,107 @@ export default async function Bookings() {
                 include: {
                     user: { select: { first_name: true, last_name: true, email: true } },
                     room: { select: { name: true } },
-                    bookingItems: { include: { equipment: true } }
-                }
+                    bookingItems: { include: { equipment: true } },
+                },
             },
-            sender: { select: { first_name: true, last_name: true } }
-        }
+        },
     });
 
     return (
-        <main>
-            <div className="flex justify-center mt-10 px-4">
-                <div className="w-full max-w-6xl rounded-lg shadow-md flex flex-col overflow-hidden">
-                    <div className="bg-pink-100 px-3 sm:px-4 py-3 border-b">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-medium text-base sm:text-lg">Bookings</h3>
-                        </div>
+        <main className="min-h-screen bg-gray-100 px-6 py-10">
+            <section className="mx-auto flex max-w-6xl flex-col gap-8">
+                <section className="overflow-hidden rounded-2xl bg-white shadow-lg">
+                    <div className="border-b border-gray-200 bg-[#4d0626] px-6 py-5 text-white">
+                        <h2 className="text-2xl font-bold">Bookings</h2>
+                        <p className="mt-2 text-sm text-pink-100">
+                            Review your own bookings and any accepted contributor bookings here.
+                        </p>
                     </div>
 
-                    <div className="w-full max-h-120 overflow-x-auto overflow-y-auto">
-                        <table className="w-full border">
-                            <thead className="sticky top-0 bg-pink-50">
-                                <tr className="border-b pb-3">
-                                    <th className="p-3 text-center">First Name</th>
-                                    <th className="p-3 text-center">Last Name</th>
-                                    <th className="p-3 text-center">Email</th>
-                                    <th className="p-3 text-center">Room</th>
-                                    <th className="p-3 text-center">Booking Date</th>
-                                    <th className="p-3 text-center">Start Time</th>
-                                    <th className="p-3 text-center">End Time</th>
-                                    <th className="p-3 text-center">Status</th>
-                                    <th className="p-3 text-center">Actions</th>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead className="bg-pink-50">
+                                <tr className="border-b border-pink-100 text-xs uppercase tracking-wide text-slate-600">
+                                    <th className="px-4 py-4 text-left font-semibold">Name</th>
+                                    <th className="px-4 py-4 text-left font-semibold">Email</th>
+                                    <th className="px-4 py-4 text-left font-semibold">Room</th>
+                                    <th className="px-4 py-4 text-left font-semibold">Booking date</th>
+                                    <th className="px-4 py-4 text-left font-semibold">Start time</th>
+                                    <th className="px-4 py-4 text-left font-semibold">End time</th>
+                                    <th className="px-4 py-4 text-left font-semibold">Status</th>
+                                    <th className="px-4 py-4 text-center font-semibold">Actions</th>
+                                    <th className="px-4 py-4 text-center font-semibold">Chat</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
-                                {/* Own bookings */}
-                                {allBookings.map(item => (
-                                    <tr key={item.id} className="border-b">
-                                        <td className="p-3 text-center">{item.user?.first_name}</td>
-                                        <td className="p-3 text-center">{item.user?.last_name}</td>
-                                        <td className="p-3 text-center">{item.user?.email}</td>
-                                        <td className="p-3 text-center">{item.room?.name}</td>
-                                        <td className="p-3 text-center">{item.booking_date.toDateString()}</td>
-                                        <td className="p-3 text-center">{item.start_time.toString()}</td>
-                                        <td className="p-3 text-center">{item.end_time.toString()}</td>
-                                        <td className="p-3 text-center">{item.status}</td>
-                                        <td className="p-3 text-center">
-                                            <ViewBookingButton booking={item} role={user_role} />
+                            <tbody className="divide-y divide-gray-100 bg-white">
+                                {allBookings.map((item) => (
+                                    <tr key={item.id} className="transition hover:bg-pink-50/30">
+                                        <td className="px-4 py-4 text-sm text-gray-900">
+                                            <div className="font-semibold">
+                                                {`${item.user?.first_name ?? ""} ${item.user?.last_name ?? ""}`.trim() || "Unknown user"}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-sm text-gray-600">{item.user?.email}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{item.room?.name}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{formatDateLabel(item.booking_date)}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{item.start_time}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{item.end_time}</td>
+                                        <td className="px-4 py-4 text-sm">
+                                            <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClasses(item.status)}`}>
+                                                {formatStatusLabel(item.status)}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <ViewBookingButton booking={item} role={userRole} />
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <BookingChatButton
+                                                bookingId={item.id}
+                                                heading={`Booking chat for ${item.room?.name ?? "booking"}`}
+                                                subheading="Message the technician team here about this booking."
+                                                buttonLabel="Open chat"
+                                                buttonClassName="rounded-md bg-[#B80050] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#970041]"
+                                            />
                                         </td>
                                     </tr>
                                 ))}
 
-                                {/* Pending invites */}
-                                {pendingInvites.map(invite => (
-                                    <tr key={`invite-${invite.id}`} className="border-b bg-pink-50/40">
-                                        <td className="p-3 text-center">{invite.booking?.user?.first_name}</td>
-                                        <td className="p-3 text-center">{invite.booking?.user?.last_name}</td>
-                                        <td className="p-3 text-center">{invite.booking?.user?.email}</td>
-                                        <td className="p-3 text-center">{invite.booking?.room?.name}</td>
-                                        <td className="p-3 text-center">{invite.booking?.booking_date.toDateString()}</td>
-                                        <td className="p-3 text-center">{invite.booking?.start_time.toString()}</td>
-                                        <td className="p-3 text-center">{invite.booking?.end_time.toString()}</td>
-                                        <td className="p-3 text-center">
-                                            <span className=" bg-yellow-50 text-yellow-800 border border-yellow-200 px-2 py-0.5 rounded-full">
-                                                INVITE
+                                {pendingInvites.map((invite) => invite.booking ? (
+                                    <tr key={`invite-${invite.id}`} className="bg-amber-50/30 transition hover:bg-amber-50/50">
+                                        <td className="px-4 py-4 text-sm text-gray-900">
+                                            <div className="font-semibold">
+                                                {`${invite.booking.user?.first_name ?? ""} ${invite.booking.user?.last_name ?? ""}`.trim() || "Unknown user"}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-sm text-gray-600">{invite.booking.user?.email}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{invite.booking.room?.name}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{formatDateLabel(invite.booking.booking_date)}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{invite.booking.start_time}</td>
+                                        <td className="px-4 py-4 text-sm text-gray-700">{invite.booking.end_time}</td>
+                                        <td className="px-4 py-4 text-sm">
+                                            <span className="inline-flex rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-xs font-semibold text-yellow-700">
+                                                Invite
                                             </span>
                                         </td>
-                                        <td className="p-3 text-center">
+                                        <td className="px-4 py-4 text-center">
                                             <AcceptDeclineButtons inviteId={invite.id} />
                                         </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-500 cursor-not-allowed"
+                                            >
+                                                Open chat
+                                            </button>
+                                        </td>
                                     </tr>
-                                ))}
+                                ) : null)}
 
                                 {allBookings.length === 0 && pendingInvites.length === 0 && (
                                     <tr>
-                                        <td colSpan={9} className="p-6 text-center text-gray-400 text-sm">
+                                        <td colSpan={9} className="px-6 py-12 text-center text-sm text-gray-500">
                                             No bookings found.
                                         </td>
                                     </tr>
@@ -146,8 +204,8 @@ export default async function Bookings() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
+                </section>
+            </section>
         </main>
     );
 }

@@ -1,90 +1,63 @@
-"use client";
-
 import Navbar from "@/components/Navbar";
+import DocumentResourcePanel from "@/components/documentResourcePanel";
 
-const studentResources = [
+const studentSafetyResources = [
     {
-        title: "Safety and Risk Assessment Form",
-        description:
-            "This form must be completed before a student can create a booking.",
+        title: "Safety and Health Risk Assessment Form",
         viewHref: "/student-forms/standard-activity-risk-assessment-template.pdf",
-        downloadHref: "/student-forms/standard-activity-risk-assessment-template.docx",
-        viewLabel: "View form",
-        downloadLabel: "Download form",
-        accentClass: "border-pink-200 bg-pink-50",
+        downloadHref: "/student-forms/standard-activity-risk-assessment-template.pdf",
     },
+];
+
+const coshhResources = [
     {
         title: "COSHH Data Sheet",
-        description:
-            "Use this document to review the COSHH information available for student bookings.",
-        viewHref: "/student-forms/torsshhncs26-coshh-ra-baseline-massage-milk.pdf",
-        downloadHref: "/student-forms/torsshhncs26-coshh-ra-baseline-massage-milk.docx",
-        viewLabel: "View COSHH sheet",
-        downloadLabel: "Download COSHH sheet",
-        accentClass: "border-blue-200 bg-blue-50",
+        viewHref: "/staff-documents/torsshhncs26-coshh-ra-baseline-massage-milk.pdf",
+        downloadHref: "/staff-documents/torsshhncs26-coshh-ra-baseline-massage-milk.pdf",
     },
 ];
 
 export default function StudentDashboard() {
     return (
         <div className="flex min-h-screen flex-col">
-            <Navbar showLogout={true} links={[
-                { href: "/dashboard/student", label: "Home", primary: true },
-                { href: "/dashboard/student/bookings", label: "Bookings" },
-                { href: "/dashboard/student/catalogue", label: "Catalogue" }
-            ]} />
+            <Navbar
+                showLogout={true}
+                links={[
+                    { href: "/dashboard/student", label: "Home", primary: true },
+                    { href: "/dashboard/student/bookings", label: "Bookings" },
+                    { href: "/dashboard/student/catalogue", label: "Catalogue" },
+                ]}
+            />
 
-            <main className="min-h-screen bg-gray-100 px-6 py-10">
+            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(184,0,80,0.12),transparent_28%),linear-gradient(180deg,#fdf7fa_0%,#f3f4f6_45%,#eef1f4_100%)] px-6 py-10">
                 <section className="mx-auto flex max-w-6xl flex-col gap-8">
-                    <div className="rounded-2xl bg-white p-8 shadow-lg">
-                        <h1 className="text-3xl font-bold text-gray-900">
+                    <div className="rounded-3xl border border-white/70 bg-white/90 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
+                        <span className="inline-flex rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-900">
+                            Student view
+                        </span>
+                        <h1 className="mt-4 text-3xl font-bold text-gray-900">
                             Student Dashboard
                         </h1>
-                        <p className="mt-3 max-w-2xl text-gray-600">
-                            Download the required booking documents below before
-                            submitting your request.
+                        <p className="mt-3 max-w-3xl text-gray-600">
+                            Use the bookings tab to check the latest technician decision on your submitted requests, or open the catalogue to prepare a new booking.
                         </p>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-2">
-                        {studentResources.map((resource) => (
-                            <article
-                                key={resource.title}
-                                className={`rounded-2xl border p-6 shadow-sm ${resource.accentClass}`}
-                            >
-                                <h2 className="text-2xl font-bold text-gray-900">
-                                    {resource.title}
-                                </h2>
+                    <section className="grid gap-6 xl:grid-cols-2">
+                        <DocumentResourcePanel
+                            title="Safety and Health Risk"
+                            description="Open the student risk assessment form before submitting a booking that needs supporting safety documentation."
+                            items={studentSafetyResources}
+                        />
 
-                                <p className="mt-3 min-h-16 text-gray-700">
-                                    {resource.description}
-                                </p>
-
-                                {/* View opens the PDF in a new tab, while download keeps the editable document file. */}
-                                <div className="mt-6 flex flex-wrap gap-3">
-                                    <a
-                                        href={resource.viewHref}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="inline-flex rounded-md bg-pink-950 px-4 py-2 font-semibold text-white transition hover:bg-pink-900"
-                                    >
-                                        {resource.viewLabel}
-                                    </a>
-
-                                    <a
-                                        href={resource.downloadHref}
-                                        download
-                                        className="inline-flex rounded-md border border-gray-400 bg-white px-4 py-2 font-semibold text-gray-900 transition hover:bg-gray-50"
-                                    >
-                                        {resource.downloadLabel}
-                                    </a>
-                                </div>
-                            </article>
-                        ))}
-                    </div>
+                        <DocumentResourcePanel
+                            title="COSHH Data Sheet"
+                            description="Keep the COSHH reference close when your booking depends on specialist products, substances, or handling guidance."
+                            items={coshhResources}
+                        />
+                    </section>
                 </section>
             </main>
         </div>
     );
 }
-

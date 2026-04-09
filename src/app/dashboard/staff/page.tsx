@@ -109,6 +109,7 @@ export default async function StaffDashboard() {
 
     const taskCards = tasks.map((task) => ({
         id: task.id,
+        bookingId: task.booking.id,
         title: getBookingTitle(task.booking.room.name, task.booking.booking_date),
         lesson: task.booking.lesson || "No lesson provided",
         taskType: task.task_type,

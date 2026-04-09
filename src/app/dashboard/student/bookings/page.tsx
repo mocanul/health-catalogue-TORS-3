@@ -5,11 +5,11 @@ export default async function StudentDashboard() {
     return (
         <div className="flex min-h-screen flex-col">
             <Navbar showLogout={true} links={[
-                {href: "/dashboard/student", label: "Home"},
-                {href: "/dashboard/student/bookings", label: "Bookings", primary: true},
-                {href: "/dashboard/student/catalogue", label: "Catalogue"}
+                { href: "/dashboard/student", label: "Home" },
+                { href: "/dashboard/student/bookings", label: "Bookings", primary: true },
+                { href: "/dashboard/student/catalogue", label: "Catalogue" }
             ]} />
-            <Bookings/>
+            <Bookings />
         </div>
     )
 }
