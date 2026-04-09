@@ -165,6 +165,7 @@ export default async function AdminDashboard() {
 
     const assignmentCards = assignments.map((assignment) => ({
         id: assignment.id,
+        bookingId: assignment.booking_id,
         title: getBookingTitle(
             assignment.booking.room.name,
             assignment.booking.booking_date,
