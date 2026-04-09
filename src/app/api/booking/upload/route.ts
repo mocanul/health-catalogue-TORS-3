@@ -4,6 +4,15 @@ import { validateSession } from "@/lib/auth/session";
 import cloudinary from "@/lib/cloudinary";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import crypto from "crypto";
+
+function hasCloudinaryConfig() {
+    return Boolean(
+        process.env.CLOUDINARY_CLOUD_NAME &&
+        process.env.CLOUDINARY_API_KEY &&
+        process.env.CLOUDINARY_API_SECRET,
+    );
+}
 
 export async function POST(req: Request) {
     const cookieStore = await cookies();
@@ -20,15 +29,8 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const fileExtension = file.name.split(".").pop();
-    const safeExtension = fileExtension ? `.${fileExtension}` : "";
-    const fileName = `user_${user.id}_${Date.now()}${safeExtension}`;
-    const hasCloudinaryConfig =
-        !!process.env.CLOUDINARY_CLOUD_NAME &&
-        !!process.env.CLOUDINARY_API_KEY &&
-        !!process.env.CLOUDINARY_API_SECRET;
 
-    if (hasCloudinaryConfig) {
-        const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+    if (hasCloudinaryConfig()) {
         const result = await cloudinary.uploader.upload(base64, {
             folder: "hs_forms",
             public_id: `user_${user.id}_${Date.now()}.${fileExtension}`,
@@ -38,11 +40,12 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: result.secure_url });
     }
 
+    const safeExtension = fileExtension?.replace(/[^a-zA-Z0-9]/g, "") || "bin";
+    const fileName = `user_${user.id}_${Date.now()}_${crypto.randomUUID()}.${safeExtension}`;
     const uploadDirectory = path.join(process.cwd(), "public", "uploads", "hs_forms");
-    await mkdir(uploadDirectory, { recursive: true });
 
-    const savedFilePath = path.join(uploadDirectory, fileName);
-    await writeFile(savedFilePath, buffer);
+    await mkdir(uploadDirectory, { recursive: true });
+    await writeFile(path.join(uploadDirectory, fileName), buffer);
 
     return NextResponse.json({ url: `/uploads/hs_forms/${fileName}` });
 }

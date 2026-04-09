@@ -42,11 +42,26 @@ model Booking {
   bookingDocuments  BookingDocument[]
   invites           BookingInvite[]
   bookingItems      BookingItem[]
+  messages          BookingMessage[]
   bookingTasks      BookingTask[]
 
   @@index([booking_date])
   @@index([created_by])
   @@index([room_id])
+}
+
+model BookingMessage {
+  id         Int      @id @default(autoincrement())
+  booking_id  Int
+  sender_id   Int
+  message     String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  booking     Booking  @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  sender      User     @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([booking_id, created_at])
+  @@index([sender_id])
 }
 
 model BookingInvite {
@@ -194,6 +209,7 @@ model User {
   passwordHash        String
   auditLogs           AuditLog[]
   bookings            Booking[]
+  bookingMessages     BookingMessage[]
   sentInvites         BookingInvite[]      @relation("InviteSender")
   receivedInvites     BookingInvite[]      @relation("InviteReceiver")
   bookingTasks        BookingTask[]
