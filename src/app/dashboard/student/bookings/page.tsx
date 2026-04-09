@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-import Navbar from "@/components/Navbar"
-import Bookings from "@/components/bookingTable"
-
-export default async function StudentDashboard() {
-    return (
-        <div className="flex min-h-screen flex-col">
-            <Navbar showLogout={true} links={[
-                {href: "/dashboard/student", label: "Home"},
-                {href: "/dashboard/student/bookings", label: "Bookings", primary: true},
-                {href: "/dashboard/student/catalogue", label: "Catalogue"}
-            ]} />
-            <Bookings/>
-        </div>
-    )
-}
-=======
 import { cookies } from "next/headers";
 import Navbar from "@/components/Navbar";
 import StudentBookingsManager from "@/components/studentBookingsManager";
@@ -28,19 +11,27 @@ const visibleStudentStatuses = [
     BookingStatus.REJECTED,
 ] as const;
 
+type BookingWithRelations = Awaited<ReturnType<typeof prisma.booking.findMany<{
+    include: {
+        room: true;
+        bookingItems: { include: { equipment: true } };
+    };
+}>>>[number];
+
 export default async function StudentBookingsPage() {
     const cookieStore = await cookies();
     const token = cookieStore.get("session")?.value;
     const sessionUser = token ? await validateSession(token) : null;
 
-    const [bookings, rooms] = sessionUser
-        ? await Promise.all([
+    let bookings: BookingWithRelations[] = [];
+    let rooms: { id: number; name: string }[] = [];
+
+    if (sessionUser) {
+        [bookings, rooms] = await Promise.all([
             prisma.booking.findMany({
                 where: {
                     created_by: sessionUser.id,
-                    status: {
-                        in: visibleStudentStatuses,
-                    },
+                    status: { in: [...visibleStudentStatuses] },
                 },
                 include: {
                     room: true,
@@ -56,16 +47,11 @@ export default async function StudentBookingsPage() {
                 ],
             }),
             prisma.room.findMany({
-                orderBy: {
-                    name: "asc",
-                },
-                select: {
-                    id: true,
-                    name: true,
-                },
+                orderBy: { name: "asc" },
+                select: { id: true, name: true },
             }),
-        ])
-        : [[], []];
+        ]);
+    }
 
     const bookingCards = bookings.map((booking) => ({
         id: booking.id,
@@ -75,7 +61,7 @@ export default async function StudentBookingsPage() {
         startTime: booking.start_time.slice(0, 5),
         endTime: booking.end_time.slice(0, 5),
         lesson: booking.lesson || "",
-        otherRequirements: booking.description || "",
+        otherRequirements: booking.other_requirement || "",
         status: booking.status as "SUBMITTED" | "APPROVED" | "REJECTED",
         reviewNotes: booking.review_notes,
         equipmentItems: booking.bookingItems.map((item) => ({
@@ -97,7 +83,7 @@ export default async function StudentBookingsPage() {
                 ]}
             />
 
-            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(184,0,80,0.12),_transparent_28%),linear-gradient(180deg,_#fdf7fa_0%,_#f3f4f6_45%,_#eef1f4_100%)] px-6 py-10">
+            <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(184,0,80,0.12),transparent_28%),linear-gradient(180deg,#fdf7fa_0%,#f3f4f6_45%,#eef1f4_100%)] px-6 py-10">
                 <section className="mx-auto flex max-w-6xl flex-col gap-8">
                     <div className="rounded-3xl border border-white/70 bg-white/90 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur">
                         <span className="inline-flex rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-900">
@@ -117,4 +103,3 @@ export default async function StudentBookingsPage() {
         </div>
     );
 }
->>>>>>> origin/tech-dashboard

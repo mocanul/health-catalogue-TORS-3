@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 type BookingChatButtonProps = {
@@ -52,7 +52,7 @@ export default function BookingChatButton({
 
   const currentUserId = sessionData?.currentUserId ?? "";
 
-  async function fetchMessages(showLoadingState = false) {
+  const fetchMessages = useCallback(async (showLoadingState = false) => {
     if (!sessionData) {
       return;
     }
@@ -79,7 +79,7 @@ export default function BookingChatButton({
         setLoadingMessages(false);
       }
     }
-  }
+  }, [sessionData, bookingId]);
 
   async function handleOpen() {
     setIsOpen(true);
@@ -167,7 +167,7 @@ export default function BookingChatButton({
     }, 5000);
 
     return () => window.clearInterval(intervalId);
-  }, [sessionData, isOpen, bookingId]);
+  }, [sessionData, isOpen, bookingId, fetchMessages]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -189,7 +189,7 @@ export default function BookingChatButton({
       </button>
 
       {isOpen && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-1100 flex items-center justify-center bg-black/60 p-4">
           <div className="flex h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="flex items-start justify-between border-b border-gray-200 px-6 py-5">
               <div>
@@ -248,15 +248,15 @@ export default function BookingChatButton({
                             >
                               <div
                                 className={`max-w-[78%] rounded-2xl px-4 py-3 shadow-sm ${isCurrentUser
-                                    ? "bg-pink-950 text-white"
-                                    : "bg-slate-100 text-slate-900"
+                                  ? "bg-pink-950 text-white"
+                                  : "bg-slate-100 text-slate-900"
                                   }`}
                               >
                                 <div className={`flex items-center gap-2 text-xs ${isCurrentUser ? "text-pink-100" : "text-slate-500"}`}>
                                   <span className="font-semibold">{isCurrentUser ? "You" : message.senderName}</span>
                                   <span>{formatMessageTime(message.createdAt)}</span>
                                 </div>
-                                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6">
+                                <p className="mt-2 whitespace-pre-wrap wrap-break-word text-sm leading-6">
                                   {message.text || "Unsupported message type"}
                                 </p>
                               </div>
@@ -310,4 +310,3 @@ export default function BookingChatButton({
     </>
   );
 }
-
