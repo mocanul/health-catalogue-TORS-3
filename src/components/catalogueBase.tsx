@@ -41,6 +41,13 @@ type Equipment = {
     fixed_room_id: number | null;
     room: { name: string } | null;
 };
+type RecentBooking = {
+    id: number;
+    bookingDate: string;
+    roomName: string;
+    items: BookingItem[];
+};
+
 
 type KitItemDefinition = {
     name: string;
@@ -60,6 +67,7 @@ const TABS = [
     "Imaging & Diagnostics",
     "Emergency & Rehab",
     "Specialist Care",
+    "Recents",
     "Kits",
     "Favourites",
 ] as const;
@@ -70,6 +78,7 @@ const TAB_CATEGORIES: Record<string, string[]> = {
     "Imaging & Diagnostics": ["Imaging & Radiotherapy", "Monitoring & Diagnostics"],
     "Emergency & Rehab": ["Emergency & Pre-hospital (Paramedic)", "MSK", "Patient Manoeuvering"],
     "Specialist Care": ["Midwifery", "Mental Health", "Dietetics", "Nutrition & Anthropometry"],
+    "Recents": [],
     "Kits": [],
     "Favourites": [],
 };
@@ -285,6 +294,7 @@ function normaliseCatalogueName(value: string) {
 
 export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, isBooking, onAddItem }: Props) {
     const [equipment, setEquipment] = useState<Equipment[]>([]);
+    const [recentBookings, setRecentBookings] = useState<RecentBooking[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -312,6 +322,18 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
             })
             .then((ids: number[]) => {
                 if (ids) setFavourites(new Set(ids));
+            })
+            .catch(() => { });
+    }, []);
+
+    useEffect(() => {
+        fetch("/api/equipment/recents")
+            .then((res) => {
+                if (!res.ok) return;
+                return res.json();
+            })
+            .then((data: RecentBooking[]) => {
+                if (data) setRecentBookings(data);
             })
             .catch(() => { });
     }, []);
@@ -707,3 +729,4 @@ export default function Catalogue({ selectedRoom: _selectedRoom, selectedSlot, i
         </div>
     );
 }
+
