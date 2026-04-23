@@ -1,32 +1,8 @@
 # TORS – Health Equipment Ordering Catalogue
 
-## Overview Part 1
-Web-bsaed health equipment ordering catalogue including the following:
+### Overview
 
-- **Clear display of the equipment, divided into categories, including quantities**
-- **Digital shopping basket where users can add items to from the catalogue**
-- **Link items booked to lessons, rooms and calendars**
-- **Allow removing or adding more items to a booking**
-- **An "Other" option, free input text box for things that aren't in stock**
-
-**??**
-- **Option to allocate rooms, lessons and days to the list**
-- **Attach files feature**
-- **Compulsory fields for health and safety risk assessments**
-**??**
-
-Further features for linked to catalogue:
-- **Show if equipment booking has been submitted/ reviewed/ actioned**
-- **Two way communication**
-- **Flag if equipment has been booked out on specific day**
-- **Display time tables to avoid confusion regarding times/dates/lesson titles**
-- **Allow multiple users to contribute to equipment bookings**
-- **Academic feedback**
-- **Audit for booking, showing date created_on, changes, reviwed_on, last used, etc.**
-- **Ability to gorup items into procedure packs or kits**
-
-The list above includes functional and non-functional requirements for the catalogue. Changes to be made in the future based on progress and client discussions. Part 2, 3 and 4 to be included and discussed in the future as well.
-
+The Tors Health Equipment Ordering Catalogue is a web-based project that allows users to book a room for a specified date and time, as well as request equipment from a catalogue. Technician users can edit the catalogue, adding, removing and editing items. Once a booking is made, a staff user will either deny it, sending it back for the booker to fix, or approve it. When an approved booking is due, a technician user will assign the booking to either themselves or someone else before taking the booked equipment to the correct room.
 
 ## Tech Stack
 
@@ -50,30 +26,24 @@ Backend logic is handled within Next.js, reducing architectural complexity while
 
 Online hosting for PostgreSQL, easy to access and use throughout the development.
 
-## Setup
+### APIs
 
-### Prerequisites
-- Node.js
-- Git
+#### Claudeinary
+For uploading and downloading files
 
-### Dependancies
-- ```npm install```
+- **https://cloudinary.com/**
 
-### Environment
-- Create a .env file in the project root
+- **https://github.com/cloudinary**
 
-### Database
+#### TalkJS
+For 2-Way text chats
 
-- Generate prisma client
-```npx prisma generate```
+- **https://talkjs.com/**
 
-- Run prisma studio to view database
-```npx prisma studio```
+- **https://github.com/talkjs**
 
-### Run program
-```npm run dev```
+## Hosting
 
+- **Hosted via Vercel**
 
-
-## Readme
-This is not the final version of the readme
+https://tors-3-health-catalogue.vercel.app
