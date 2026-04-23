@@ -1,6 +1,8 @@
 # TORS – Health Equipment Ordering Catalogue
 
-The Tors Health Equipment Ordering Catalogue is a web-based project that allows users to book a room for a specified date and time, as well as request equipment from a catalogue. Staff users can edit the catalogue, adding, removing and editing items. Once a booking is made, a staff user will either deny it, sending it back for the booker to fix, or approve it.
+### Overview
+
+The Tors Health Equipment Ordering Catalogue is a web-based project that allows users to book a room for a specified date and time, as well as request equipment from a catalogue. Technician users can edit the catalogue, adding, removing and editing items. Once a booking is made, a staff user will either deny it, sending it back for the booker to fix, or approve it. When an approved booking is due, a technician user will assign the booking to either themselves or someone else before taking the booked equipment to the correct room.
 
 ## Tech Stack
 
@@ -26,12 +28,22 @@ Online hosting for PostgreSQL, easy to access and use throughout the development
 
 ### APIs
 
-- **Claudeinary**
+#### Claudeinary
 For uploading and downloading files
 
-- **TalkJS**
+- **https://cloudinary.com/**
+
+- **https://github.com/cloudinary**
+
+#### TalkJS
 For 2-Way text chats
+
+- **https://talkjs.com/**
+
+- **https://github.com/talkjs**
 
 ## Hosting
 
 - **Hosted via Vercel**
+
+https://tors-3-health-catalogue.vercel.app
