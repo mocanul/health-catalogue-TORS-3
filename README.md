@@ -1,32 +1,30 @@
 # TORS – Health Equipment Ordering Catalogue
 
 ## Overview Part 1
-Web-bsaed health equipment ordering catalogue including the following:
+Web-based health equipment ordering catalogue including the following:
 
 - **Clear display of the equipment, divided into categories, including quantities**
-- **Digital shopping basket where users can add items to from the catalogue**
-- **Link items booked to lessons, rooms and calendars**
-- **Allow removing or adding more items to a booking**
-- **An "Other" option, free input text box for things that aren't in stock**
+- **Page to allow staff to add, remove and edit catalogue items**
+- **Booking feature**
+    - **Users can:**
+    - **choose a date and time for their booking**
+    - **choose a room**
+    - **add and remove equipment**
+    - **upload files including a "required" section**
+    - **An "Other" option, free input text box for things that aren't in stock**
+- **Staff can approve or deny a booking**
 
-**??**
-- **Option to allocate rooms, lessons and days to the list**
-- **Attach files feature**
-- **Compulsory fields for health and safety risk assessments**
-**??**
-
-Further features for linked to catalogue:
+Further features linked to the catalogue:
 - **Show if equipment booking has been submitted/ reviewed/ actioned**
 - **Two way communication**
 - **Flag if equipment has been booked out on specific day**
 - **Display time tables to avoid confusion regarding times/dates/lesson titles**
 - **Allow multiple users to contribute to equipment bookings**
 - **Academic feedback**
-- **Audit for booking, showing date created_on, changes, reviwed_on, last used, etc.**
-- **Ability to gorup items into procedure packs or kits**
+- **Audit for booking, showing date created on, changes, reviewed, last used, etc.**
+- **Ability to group items into procedure packs or kits**
 
 The list above includes functional and non-functional requirements for the catalogue. Changes to be made in the future based on progress and client discussions. Part 2, 3 and 4 to be included and discussed in the future as well.
-
 
 ## Tech Stack
 
@@ -56,7 +54,7 @@ Online hosting for PostgreSQL, easy to access and use throughout the development
 - Node.js
 - Git
 
-### Dependancies
+### Dependencies
 - ```npm install```
 
 ### Environment
@@ -72,7 +70,6 @@ Online hosting for PostgreSQL, easy to access and use throughout the development
 
 ### Run program
 ```npm run dev```
-
 
 
 ## Readme
