@@ -27,6 +27,7 @@ describe("GET /api/equipment", () => {
                 is_active: true,
                 created_at: new Date().toISOString(),
                 fixed_room_id: null,
+                room: { name: "Room A" },
             },
             {
                 id: 2,
@@ -37,6 +38,7 @@ describe("GET /api/equipment", () => {
                 is_active: true,
                 created_at: new Date().toISOString(),
                 fixed_room_id: null,
+                room: null,
             },
         ];
 
@@ -48,6 +50,11 @@ describe("GET /api/equipment", () => {
         expect(mockFindMany).toHaveBeenCalledWith({
             where: { is_active: true },
             orderBy: { name: "asc" },
+            include: {
+                room: {
+                    select: { name: true },
+                },
+            },
         });
         expect(response.status).toBe(200);
         expect(data).toEqual(mockEquipment);
